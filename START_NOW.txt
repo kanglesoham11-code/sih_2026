@@ -1,0 +1,136 @@
+================================================================================
+                    ORCA - START NOW COMMANDS
+================================================================================
+
+Copy and paste these commands EXACTLY as shown.
+Run them ONE AT A TIME and WAIT for each to complete.
+
+================================================================================
+WINDOW 1: BACKEND API SERVER
+================================================================================
+
+cd C:\Users\SOHAM\Desktop\SIH_2026\backend
+
+python -m venv venv
+
+venv\Scripts\activate.bat
+
+pip install groq
+
+pip install -r requirements.txt
+
+alembic upgrade head
+
+python scripts\init_database.py
+
+uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
+
+[WAIT! Keep this window open. You should see "Application startup complete."]
+
+================================================================================
+WINDOW 2: FRONTEND DASHBOARD (Open NEW Command Prompt)
+================================================================================
+
+cd C:\Users\SOHAM\Desktop\SIH_2026\frontend
+
+python serve.py
+
+[WAIT! Keep this window open. Browser should open automatically.]
+
+================================================================================
+BROWSER: TEST
+================================================================================
+
+Open: http://localhost:3000
+
+You should see:
+- Purple gradient header
+- "ORCA Marine Intelligence Platform"
+- Green status badge
+- System Status card
+- Data Sources card  
+- Quick Stats card
+- Chat interface with 4 quick action buttons
+
+================================================================================
+TEST THE CHAT:
+================================================================================
+
+Click any of these buttons in the dashboard:
+- 🌊 Ocean Conditions
+- 🎣 Fishing Zones
+- ⚠️ Safety Check
+- 🌤️ Weather
+
+Or type: "What are the ocean conditions near Mumbai?"
+
+================================================================================
+GET LIVE LINK (Optional):
+================================================================================
+
+1. Download ngrok: https://ngrok.com/download
+2. Extract to Desktop
+3. Open NEW Command Prompt:
+
+cd C:\Users\SOHAM\Desktop\ngrok
+
+ngrok http 3000
+
+4. Copy the https:// link (e.g., https://abc123.ngrok.io)
+5. Share that link with anyone!
+
+================================================================================
+TROUBLESHOOTING:
+================================================================================
+
+If "connection refused" error:
+- Make sure BOTH windows are still running
+- Check Window 1 says "Application startup complete"
+- Check Window 2 says "Server running at: http://localhost:3000"
+
+If Python not found:
+- Install from: https://www.python.org/downloads/
+- Check "Add Python to PATH"
+- Restart Command Prompt
+
+If Port 8000 in use:
+netstat -ano | findstr :8000
+taskkill /PID <number> /F
+
+If Docker not running:
+- Open Docker Desktop
+- Wait for it to be ready
+- Run: docker-compose up -d postgres redis minio
+
+================================================================================
+IMPORTANT NOTES:
+================================================================================
+
+✅ Docker MUST be running (Docker Desktop)
+✅ Keep BOTH Command Prompt windows open
+✅ Don't close them until you're done testing
+✅ First run downloads packages (takes 2-3 minutes)
+✅ Subsequent runs are faster (30 seconds)
+
+================================================================================
+SUCCESS INDICATORS:
+================================================================================
+
+Window 1 shows:
+  INFO: Application startup complete.
+  
+Window 2 shows:
+  Server running at: http://localhost:3000
+
+Browser shows:
+  ORCA dashboard with green "System Operational" badge
+
+================================================================================
+THAT'S IT! ORCA IS RUNNING!
+================================================================================
+
+Dashboard: http://localhost:3000
+API Docs:  http://localhost:8000/docs
+API Test:  http://localhost:8000/health
+
+================================================================================

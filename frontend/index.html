@@ -1,0 +1,493 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ORCA - Marine Intelligence Platform</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .header h1 {
+            color: #2d3748;
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            color: #718096;
+            font-size: 1.1em;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 8px 16px;
+            background: #48bb78;
+            color: white;
+            border-radius: 20px;
+            font-weight: bold;
+            margin-top: 10px;
+        }
+
+        .status-badge.loading {
+            background: #ed8936;
+        }
+
+        .status-badge.error {
+            background: #f56565;
+        }
+
+        .dashboard {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .card {
+            background: white;
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+
+        .card h2 {
+            color: #2d3748;
+            margin-bottom: 15px;
+            font-size: 1.5em;
+            border-bottom: 3px solid #667eea;
+            padding-bottom: 10px;
+        }
+
+        .metric {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px 0;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        .metric:last-child {
+            border-bottom: none;
+        }
+
+        .metric-label {
+            color: #718096;
+            font-weight: 500;
+        }
+
+        .metric-value {
+            color: #2d3748;
+            font-weight: bold;
+        }
+
+        .metric-value.good {
+            color: #48bb78;
+        }
+
+        .metric-value.warning {
+            color: #ed8936;
+        }
+
+        .metric-value.error {
+            color: #f56565;
+        }
+
+        .chat-section {
+            background: white;
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            margin-bottom: 20px;
+        }
+
+        .chat-messages {
+            height: 400px;
+            overflow-y: auto;
+            border: 2px solid #e2e8f0;
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 15px;
+            background: #f7fafc;
+        }
+
+        .message {
+            margin-bottom: 15px;
+            padding: 12px;
+            border-radius: 8px;
+            max-width: 80%;
+        }
+
+        .message.user {
+            background: #667eea;
+            color: white;
+            margin-left: auto;
+            text-align: right;
+        }
+
+        .message.agent {
+            background: #e2e8f0;
+            color: #2d3748;
+        }
+
+        .message.system {
+            background: #fed7d7;
+            color: #742a2a;
+            text-align: center;
+            max-width: 100%;
+        }
+
+        .chat-input-group {
+            display: flex;
+            gap: 10px;
+        }
+
+        .chat-input {
+            flex: 1;
+            padding: 12px;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 1em;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1em;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .btn-primary {
+            background: #667eea;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #5a67d8;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-secondary {
+            background: #48bb78;
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background: #38a169;
+        }
+
+        .source-item {
+            padding: 10px;
+            margin: 5px 0;
+            background: #f7fafc;
+            border-left: 4px solid #667eea;
+            border-radius: 5px;
+        }
+
+        .source-item.active {
+            border-left-color: #48bb78;
+        }
+
+        .source-item.inactive {
+            border-left-color: #f56565;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 20px;
+            color: #718096;
+        }
+
+        .spinner {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #667eea;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 20px auto;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .quick-actions {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .quick-action {
+            padding: 10px 15px;
+            background: #edf2f7;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            cursor: pointer;
+            text-align: center;
+            transition: all 0.3s;
+        }
+
+        .quick-action:hover {
+            background: #667eea;
+            color: white;
+            border-color: #667eea;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🌊 ORCA Marine Intelligence Platform</h1>
+            <p>Marine EcOsystem Reasoning with Collaborative Agents</p>
+            <span class="status-badge loading" id="statusBadge">Checking Status...</span>
+        </div>
+
+        <div class="dashboard">
+            <div class="card">
+                <h2>System Status</h2>
+                <div id="systemStatus" class="loading">
+                    <div class="spinner"></div>
+                    <p>Loading system status...</p>
+                </div>
+            </div>
+
+            <div class="card">
+                <h2>Data Sources</h2>
+                <div id="dataSources" class="loading">
+                    <div class="spinner"></div>
+                    <p>Loading data sources...</p>
+                </div>
+            </div>
+
+            <div class="card">
+                <h2>Quick Stats</h2>
+                <div class="metric">
+                    <span class="metric-label">Active Agents:</span>
+                    <span class="metric-value good" id="activeAgents">5</span>
+                </div>
+                <div class="metric">
+                    <span class="metric-label">Data Sources:</span>
+                    <span class="metric-value good" id="sourcesCount">-</span>
+                </div>
+                <div class="metric">
+                    <span class="metric-label">API Version:</span>
+                    <span class="metric-value">1.0.0</span>
+                </div>
+                <div class="metric">
+                    <span class="metric-label">Environment:</span>
+                    <span class="metric-value warning">Development</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="chat-section">
+            <h2 style="color: #2d3748; margin-bottom: 15px;">🤖 Chat with ORCA Agent</h2>
+            
+            <div class="quick-actions">
+                <div class="quick-action" onclick="sendQuickMessage('What are the ocean conditions near Mumbai?')">
+                    🌊 Ocean Conditions
+                </div>
+                <div class="quick-action" onclick="sendQuickMessage('Where are good fishing zones?')">
+                    🎣 Fishing Zones
+                </div>
+                <div class="quick-action" onclick="sendQuickMessage('Is it safe to go fishing today?')">
+                    ⚠️ Safety Check
+                </div>
+                <div class="quick-action" onclick="sendQuickMessage('Show weather forecast')">
+                    🌤️ Weather
+                </div>
+            </div>
+
+            <div class="chat-messages" id="chatMessages">
+                <div class="message system">
+                    Welcome to ORCA! Ask me anything about marine conditions, fishing zones, weather, or safety.
+                </div>
+            </div>
+
+            <div class="chat-input-group">
+                <input 
+                    type="text" 
+                    class="chat-input" 
+                    id="chatInput" 
+                    placeholder="Ask about ocean conditions, fishing zones, weather..."
+                    onkeypress="if(event.key==='Enter') sendMessage()"
+                >
+                <button class="btn btn-primary" onclick="sendMessage()">Send</button>
+                <button class="btn btn-secondary" onclick="clearChat()">Clear</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = 'http://localhost:8000';
+        
+        // Load system status
+        async function loadSystemStatus() {
+            try {
+                const response = await fetch(`${API_BASE}/health`);
+                const data = await response.json();
+                
+                document.getElementById('statusBadge').className = 'status-badge';
+                document.getElementById('statusBadge').textContent = '✅ System Operational';
+                
+                document.getElementById('systemStatus').innerHTML = `
+                    <div class="metric">
+                        <span class="metric-label">Status:</span>
+                        <span class="metric-value good">${data.status}</span>
+                    </div>
+                    <div class="metric">
+                        <span class="metric-label">Environment:</span>
+                        <span class="metric-value">${data.environment}</span>
+                    </div>
+                    <div class="metric">
+                        <span class="metric-label">Version:</span>
+                        <span class="metric-value">${data.version}</span>
+                    </div>
+                `;
+            } catch (error) {
+                document.getElementById('statusBadge').className = 'status-badge error';
+                document.getElementById('statusBadge').textContent = '❌ System Offline';
+                
+                document.getElementById('systemStatus').innerHTML = `
+                    <div class="message system">
+                        Failed to connect to API. Make sure the backend is running at ${API_BASE}
+                    </div>
+                `;
+            }
+        }
+
+        // Load data sources
+        async function loadDataSources() {
+            try {
+                const response = await fetch(`${API_BASE}/api/v1/sources`);
+                const sources = await response.json();
+                
+                document.getElementById('sourcesCount').textContent = sources.length;
+                
+                let html = '';
+                sources.forEach(source => {
+                    const status = source.is_active ? 'active' : 'inactive';
+                    const icon = source.is_active ? '✅' : '❌';
+                    html += `
+                        <div class="source-item ${status}">
+                            ${icon} <strong>${source.name}</strong><br>
+                            <small>${source.provider} - ${source.interface_type}</small>
+                        </div>
+                    `;
+                });
+                
+                document.getElementById('dataSources').innerHTML = html;
+            } catch (error) {
+                document.getElementById('dataSources').innerHTML = `
+                    <div class="message system">
+                        Could not load data sources. Check if API is running.
+                    </div>
+                `;
+            }
+        }
+
+        // Send chat message
+        async function sendMessage() {
+            const input = document.getElementById('chatInput');
+            const message = input.value.trim();
+            
+            if (!message) return;
+            
+            // Add user message
+            addMessage(message, 'user');
+            input.value = '';
+            
+            // Show loading
+            const loadingId = 'loading-' + Date.now();
+            addMessage('Thinking...', 'agent', loadingId);
+            
+            try {
+                const response = await fetch(`${API_BASE}/api/v1/chat`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        message: message,
+                        mode: 'live'
+                    })
+                });
+                
+                const data = await response.json();
+                
+                // Remove loading message
+                document.getElementById(loadingId)?.remove();
+                
+                // Add agent response
+                addMessage(data.message || data.detail || 'Sorry, I encountered an error.', 'agent');
+                
+            } catch (error) {
+                document.getElementById(loadingId)?.remove();
+                addMessage('Error: Could not connect to ORCA agent. Make sure the backend is running.', 'system');
+            }
+        }
+
+        // Send quick message
+        function sendQuickMessage(message) {
+            document.getElementById('chatInput').value = message;
+            sendMessage();
+        }
+
+        // Add message to chat
+        function addMessage(text, type, id = null) {
+            const messagesDiv = document.getElementById('chatMessages');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${type}`;
+            if (id) messageDiv.id = id;
+            messageDiv.textContent = text;
+            messagesDiv.appendChild(messageDiv);
+            messagesDiv.scrollTop = messagesDiv.scrollHeight;
+        }
+
+        // Clear chat
+        function clearChat() {
+            document.getElementById('chatMessages').innerHTML = `
+                <div class="message system">
+                    Chat cleared. Ask me anything about marine conditions!
+                </div>
+            `;
+        }
+
+        // Load data on page load
+        window.addEventListener('load', () => {
+            loadSystemStatus();
+            loadDataSources();
+        });
+    </script>
+</body>
+</html>
