@@ -111,20 +111,40 @@ class Settings(BaseSettings):
     @field_validator("DATABASE_URL", mode="before")
     @classmethod
     def fix_database_url(cls, v: str) -> str:
-        """Fix Render's postgres:// to postgresql+asyncpg://"""
-        if v and isinstance(v, str) and v.startswith("postgres://"):
+        """Fix Render's postgres:// or postgresql:// to postgresql+asyncpg://"""
+        if not v or not isinstance(v, str):
+            return v
+        if v.startswith("postgres://"):
             return v.replace("postgres://", "postgresql+asyncpg://", 1)
+        if v.startswith("postgresql://"):
+            return v.replace("postgresql://", "postgresql+asyncpg://", 1)
+        if v.startswith("postgresql+psycopg2://"):
+            return v.replace("postgresql+psycopg2://", "postgresql+asyncpg://", 1)
         return v
     
     @field_validator("POSTGIS_URL", mode="before")
     @classmethod
     def default_postgis_url(cls, v: Optional[str], info) -> str:
-        """Default POSTGIS_URL to DATABASE_URL if not provided"""
+        """Default POSTGIS_URL to DATABASE_URL if not provided and fix asyncpg"""
         if v is None:
+            # Info.data.get("DATABASE_URL") already ran through its validator
+            # if order is preserved, but we should just in case apply the logic
             db_url = info.data.get("DATABASE_URL", "")
+            if db_url and isinstance(db_url, str):
+                if db_url.startswith("postgres://"):
+                    db_url = db_url.replace("postgres://", "postgresql+asyncpg://", 1)
+                elif db_url.startswith("postgresql://"):
+                    db_url = db_url.replace("postgresql://", "postgresql+asyncpg://", 1)
+                elif db_url.startswith("postgresql+psycopg2://"):
+                    db_url = db_url.replace("postgresql+psycopg2://", "postgresql+asyncpg://", 1)
             return db_url
-        if v and isinstance(v, str) and v.startswith("postgres://"):
-            return v.replace("postgres://", "postgresql+asyncpg://", 1)
+        if v and isinstance(v, str):
+            if v.startswith("postgres://"):
+                return v.replace("postgres://", "postgresql+asyncpg://", 1)
+            if v.startswith("postgresql://"):
+                return v.replace("postgresql://", "postgresql+asyncpg://", 1)
+            if v.startswith("postgresql+psycopg2://"):
+                return v.replace("postgresql+psycopg2://", "postgresql+asyncpg://", 1)
         return v
     
     @property
