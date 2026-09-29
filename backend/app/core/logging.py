@@ -31,25 +31,29 @@ def setup_logging():
             serialize=True,  # JSON output
         )
     
-    # File logging
-    logger.add(
-        "logs/orca_{time:YYYY-MM-DD}.log",
-        rotation="00:00",  # Rotate at midnight
-        retention="30 days",
-        compression="zip",
-        format="{time:YYYY-MM-DD HH:mm:ss} | {level: <8} | {name}:{function}:{line} - {message}",
-        level="INFO",
-    )
-    
-    # Error file
-    logger.add(
-        "logs/orca_errors_{time:YYYY-MM-DD}.log",
-        rotation="00:00",
-        retention="90 days",
-        compression="zip",
-        format="{time:YYYY-MM-DD HH:mm:ss} | {level: <8} | {name}:{function}:{line} - {message}",
-        level="ERROR",
-    )
+    # File logging (best-effort — skipped on ephemeral filesystems like Render)
+    try:
+        logger.add(
+            "logs/orca_{time:YYYY-MM-DD}.log",
+            rotation="00:00",  # Rotate at midnight
+            retention="30 days",
+            compression="zip",
+            format="{time:YYYY-MM-DD HH:mm:ss} | {level: <8} | {name}:{function}:{line} - {message}",
+            level="INFO",
+        )
+        
+        # Error file
+        logger.add(
+            "logs/orca_errors_{time:YYYY-MM-DD}.log",
+            rotation="00:00",
+            retention="90 days",
+            compression="zip",
+            format="{time:YYYY-MM-DD HH:mm:ss} | {level: <8} | {name}:{function}:{line} - {message}",
+            level="ERROR",
+        )
+    except Exception:
+        # File logging unavailable (e.g., read-only or ephemeral filesystem)
+        pass
     
     logger.info("Logging configured successfully")
 

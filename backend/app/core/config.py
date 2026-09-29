@@ -4,7 +4,7 @@ Loads settings from environment variables with validation
 """
 
 from typing import List, Optional
-from pydantic import field_validator
+from pydantic import field_validator, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -89,8 +89,9 @@ class Settings(BaseSettings):
     # Monitoring
     SENTRY_DSN: Optional[str] = None
     
-    # CORS
-    CORS_ORIGINS: List[str] = ["http://localhost:3000", "http://localhost:8000"]
+    # CORS — stored as a plain string to avoid pydantic-settings JSON parse errors;
+    # parsed into a list by the model_validator below.
+    CORS_ORIGINS: str = "http://localhost:3000,http://localhost:8000"
     
     # Security
     SECRET_MANAGER: str = "env"  # env|vault|aws|gcp
@@ -126,13 +127,20 @@ class Settings(BaseSettings):
             return v.replace("postgres://", "postgresql+asyncpg://", 1)
         return v
     
-    @field_validator("CORS_ORIGINS", mode="before")
-    @classmethod
-    def assemble_cors_origins(cls, v: any) -> List[str]:
-        """Support comma-separated strings for CORS origins in Render"""
-        if isinstance(v, str) and not v.startswith("["):
-            return [i.strip() for i in v.split(",") if i.strip()]
-        return v
+    @property
+    def cors_origins_list(self) -> List[str]:
+        """Parse CORS_ORIGINS string into a list of origin URLs."""
+        raw = self.CORS_ORIGINS
+        if isinstance(raw, str):
+            # Support JSON array format or comma-separated
+            if raw.startswith("["):
+                import json
+                try:
+                    return json.loads(raw)
+                except (json.JSONDecodeError, ValueError):
+                    pass
+            return [o.strip() for o in raw.split(",") if o.strip()]
+        return list(raw) if raw else []
     
     @property
     def is_development(self) -> bool:
@@ -147,3 +155,4 @@ class Settings(BaseSettings):
 
 # Global settings instance
 settings = Settings()
+

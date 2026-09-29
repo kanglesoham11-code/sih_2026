@@ -1,7 +1,9 @@
 #!/bin/bash
 set -e
 
-# Wait for DB if necessary (optional, but good practice)
+# Ensure logs directory exists for loguru file handlers
+mkdir -p logs
+
 # Run migrations
 echo "Running Alembic migrations..."
 alembic upgrade head

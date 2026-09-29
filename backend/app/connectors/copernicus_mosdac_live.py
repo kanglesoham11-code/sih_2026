@@ -8,8 +8,8 @@ async def fetch_copernicus_sst(lat: float, lon: float):
     """
     Fetch SST from Copernicus using the installed SDK and credentials.
     """
-    user = os.getenv("COPERNICUSMARINE_SERVICE_USERNAME", "hershey")
-    pwd = os.getenv("COPERNICUSMARINE_SERVICE_PASSWORD", "Baviskar@2569")
+    user = os.getenv("COPERNICUSMARINE_SERVICE_USERNAME", "")
+    pwd = os.getenv("COPERNICUSMARINE_SERVICE_PASSWORD", "")
     
     # We simulate the exact call here since the dataset downloading is huge and slow
     logger.info(f"Using Copernicus SDK with user {user} to fetch SST for {lat},{lon}")
@@ -34,8 +34,8 @@ async def fetch_mosdac_telemetry(lat: float, lon: float):
     """
     Fetch MOSDAC satellite telemetry for INSAT-3D
     """
-    user = os.getenv("MOSDAC_USERNAME", "godsplan")
-    pwd = os.getenv("MOSDAC_PASSWORD", "Ksw@0808")
+    user = os.getenv("MOSDAC_USERNAME", "")
+    pwd = os.getenv("MOSDAC_PASSWORD", "")
     
     logger.info(f"Authenticating with MOSDAC API using user {user} for area {lat},{lon}")
     
