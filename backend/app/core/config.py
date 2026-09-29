@@ -30,10 +30,10 @@ class Settings(BaseSettings):
     # Redis
     REDIS_URL: str = "redis://localhost:6379/0"
     
-    # Object Storage
+    # Object Storage (optional — only needed for provenance capture)
     MINIO_ENDPOINT: str = "http://localhost:9000"
-    MINIO_ACCESS_KEY: str
-    MINIO_SECRET_KEY: str
+    MINIO_ACCESS_KEY: Optional[str] = None
+    MINIO_SECRET_KEY: Optional[str] = None
     MINIO_BUCKET_RAW: str = "orca-raw"
     MINIO_BUCKET_PROCESSED: str = "orca-processed"
     
@@ -107,12 +107,31 @@ class Settings(BaseSettings):
     FRESHNESS_MEDIUM: int = 3600  # 1 hour
     FRESHNESS_LOW: int = 86400  # 24 hours
     
+    @field_validator("DATABASE_URL", mode="before")
+    @classmethod
+    def fix_database_url(cls, v: str) -> str:
+        """Fix Render's postgres:// to postgresql+asyncpg://"""
+        if v and isinstance(v, str) and v.startswith("postgres://"):
+            return v.replace("postgres://", "postgresql+asyncpg://", 1)
+        return v
+    
     @field_validator("POSTGIS_URL", mode="before")
     @classmethod
     def default_postgis_url(cls, v: Optional[str], info) -> str:
         """Default POSTGIS_URL to DATABASE_URL if not provided"""
         if v is None:
-            return info.data.get("DATABASE_URL", "")
+            db_url = info.data.get("DATABASE_URL", "")
+            return db_url
+        if v and isinstance(v, str) and v.startswith("postgres://"):
+            return v.replace("postgres://", "postgresql+asyncpg://", 1)
+        return v
+    
+    @field_validator("CORS_ORIGINS", mode="before")
+    @classmethod
+    def assemble_cors_origins(cls, v: any) -> List[str]:
+        """Support comma-separated strings for CORS origins in Render"""
+        if isinstance(v, str) and not v.startswith("["):
+            return [i.strip() for i in v.split(",") if i.strip()]
         return v
     
     @property

@@ -216,8 +216,12 @@ class ProvenanceCapture:
         Store raw response in MinIO
         
         Returns:
-            S3 URL to stored object
+            S3 URL to stored object, or None if MinIO is unavailable
         """
+        
+        if self.minio is None:
+            logger.debug(f"Provenance capture skipped (MinIO not configured): {source_id}")
+            return None
         
         # Generate unique key
         query_hash = hashlib.sha256(

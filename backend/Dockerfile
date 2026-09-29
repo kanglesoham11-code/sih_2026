@@ -26,12 +26,15 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copy application code
 COPY . .
 
+# Make start script executable
+RUN chmod +x /app/render-start.sh
+
 # Create non-root user
 RUN useradd -m -u 1000 orca && chown -R orca:orca /app
 USER orca
 
-# Expose port
+# Expose port (Render sets PORT env var)
 EXPOSE 8000
 
 # Default command (can be overridden)
-CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
+CMD ["/app/render-start.sh"]

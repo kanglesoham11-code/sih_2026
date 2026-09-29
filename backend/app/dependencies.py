@@ -3,14 +3,13 @@ Dependency Injection
 FastAPI dependency providers for services, database, agents, etc.
 """
 
-from typing import AsyncGenerator
+from typing import AsyncGenerator, Optional
 from functools import lru_cache
 
 from fastapi import Depends, HTTPException, status
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from sqlalchemy.ext.asyncio import AsyncSession
 from redis.asyncio import Redis
-from minio import Minio
 from loguru import logger
 
 from app.core.database import get_db
@@ -55,8 +54,18 @@ async def get_redis() -> AsyncGenerator[Redis, None]:
 # ===== MinIO/S3 Client =====
 
 @lru_cache()
-def get_minio_client() -> Minio:
-    """Get MinIO client (singleton)"""
+def get_minio_client():
+    """Get MinIO client (singleton). Returns None when credentials are absent."""
+    
+    if not settings.MINIO_ACCESS_KEY or not settings.MINIO_SECRET_KEY:
+        logger.warning("MinIO credentials not configured — provenance capture disabled")
+        return None
+    
+    try:
+        from minio import Minio
+    except ImportError:
+        logger.warning("minio package not installed — provenance capture disabled")
+        return None
     
     # Parse endpoint to remove protocol
     endpoint = settings.MINIO_ENDPOINT.replace("http://", "").replace("https://", "")
@@ -72,8 +81,8 @@ def get_minio_client() -> Minio:
     return client
 
 
-def get_minio() -> Minio:
-    """Dependency for MinIO client"""
+def get_minio():
+    """Dependency for MinIO client (may return None)"""
     return get_minio_client()
 
 
@@ -123,7 +132,7 @@ _gateway_instance = None
 
 async def get_gateway(
     redis: Redis = Depends(get_redis),
-    minio: Minio = Depends(get_minio),
+    minio=Depends(get_minio),
 ) -> DataGateway:
     """
     Dependency for Data Gateway
