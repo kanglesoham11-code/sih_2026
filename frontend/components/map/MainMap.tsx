@@ -21,7 +21,7 @@ const MUMBAI_PORTS = [
   { name: 'Bhati Dock', lat: 19.1508, lon: 72.7929 },
 ]
 
-const OSM_STYLE = {
+const OSM_STYLE: any = {
   version: 8,
   sources: {
     osm: {

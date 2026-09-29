@@ -111,7 +111,8 @@ export function FishingHubSelector() {
     
     // 1. Fetch port analysis (optional, may fail)
     try {
-      const res = await fetch(`http://localhost:8000/api/port-analysis?lat=${port.lat}&lon=${port.lon}`)
+      const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+      const res = await fetch(`${API_URL}/api/port-analysis?lat=${port.lat}&lon=${port.lon}`)
       if (res.ok) {
         const data = await res.json()
         setPortAnalysis(data)
@@ -122,7 +123,8 @@ export function FishingHubSelector() {
     
     // 2. CRITICAL: Auto-trigger chat to compute PFZ zones + route from this port
     try {
-      const chatRes = await fetch('http://localhost:8000/api/chat', {
+      const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+      const chatRes = await fetch(`${API_URL}/api/chat`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
