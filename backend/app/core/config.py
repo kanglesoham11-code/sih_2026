@@ -41,7 +41,7 @@ class Settings(BaseSettings):
     GROQ_API_KEY: Optional[str] = None
     OPENAI_API_KEY: Optional[str] = None
     LLM_PROVIDER: str = "groq"
-    LLM_MODEL: str = "mixtral-8x7b-32768"
+    LLM_MODEL: str = "qwen/qwen3.8-27b"
     
     # INCOIS Services
     INCOIS_API_KEY: Optional[str] = None
