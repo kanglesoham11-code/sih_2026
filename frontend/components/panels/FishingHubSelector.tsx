@@ -1,9 +1,9 @@
 'use client'
 
 import { useStore } from '@/lib/store'
-import { motion } from 'framer-motion'
-import { Anchor, Ship, Fish, Waves, MapPin } from 'lucide-react'
-import { useState } from 'react'
+import { motion, AnimatePresence } from 'framer-motion'
+import { Anchor, Ship, Fish, Waves, MapPin, Radar, ShieldCheck, CloudSun, Route, BarChart3, Compass } from 'lucide-react'
+import { useState, useEffect, useRef } from 'react'
 
 const OFFSHORE_HUBS = [
   {
@@ -92,13 +92,133 @@ const COASTAL_SPOTS = [
   }
 ]
 
+const LOADING_STEPS = [
+  { icon: Radar, text: 'Scraping live ocean data...', color: 'text-blue-400' },
+  { icon: CloudSun, text: 'Checking weather conditions...', color: 'text-cyan-400' },
+  { icon: ShieldCheck, text: 'Running safety checks...', color: 'text-green-400' },
+  { icon: Fish, text: 'Analyzing fish migration patterns...', color: 'text-teal-400' },
+  { icon: Compass, text: 'Computing PFZ zones...', color: 'text-indigo-400' },
+  { icon: Route, text: 'Finding safest route...', color: 'text-purple-400' },
+  { icon: BarChart3, text: 'Generating intelligence report...', color: 'text-amber-400' },
+]
+
+function LoadingOverlay({ portName }: { portName: string }) {
+  const [stepIndex, setStepIndex] = useState(0)
+  const [dots, setDots] = useState('')
+
+  useEffect(() => {
+    const stepInterval = setInterval(() => {
+      setStepIndex(prev => (prev + 1) % LOADING_STEPS.length)
+    }, 2200)
+    return () => clearInterval(stepInterval)
+  }, [])
+
+  useEffect(() => {
+    const dotInterval = setInterval(() => {
+      setDots(prev => prev.length >= 3 ? '' : prev + '.')
+    }, 400)
+    return () => clearInterval(dotInterval)
+  }, [])
+
+  const currentStep = LOADING_STEPS[stepIndex]
+  const IconComponent = currentStep.icon
+
+  return (
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      transition={{ duration: 0.4 }}
+      className="fixed inset-0 z-[200] flex items-center justify-center"
+    >
+      {/* Backdrop */}
+      <div className="absolute inset-0 bg-slate-950/80 backdrop-blur-md" />
+
+      {/* Content card */}
+      <motion.div
+        initial={{ scale: 0.85, opacity: 0, y: 30 }}
+        animate={{ scale: 1, opacity: 1, y: 0 }}
+        transition={{ type: 'spring', stiffness: 200, damping: 20 }}
+        className="relative z-10 w-full max-w-md mx-4"
+      >
+        <div className="rounded-3xl bg-gradient-to-br from-slate-800/90 to-slate-900/90 border border-white/10 shadow-2xl shadow-blue-500/10 p-8 backdrop-blur-xl">
+          {/* Pulsing radar ring */}
+          <div className="flex justify-center mb-6">
+            <div className="relative w-24 h-24 flex items-center justify-center">
+              {/* Outer rings */}
+              <div className="absolute inset-0 rounded-full border-2 border-blue-500/20 animate-ping" style={{ animationDuration: '2s' }} />
+              <div className="absolute inset-2 rounded-full border-2 border-blue-400/30 animate-ping" style={{ animationDuration: '2.5s' }} />
+              <div className="absolute inset-4 rounded-full border border-blue-300/40 animate-ping" style={{ animationDuration: '3s' }} />
+              {/* Center icon */}
+              <div className="relative w-14 h-14 rounded-full bg-gradient-to-br from-blue-500 to-cyan-500 flex items-center justify-center shadow-lg shadow-blue-500/40">
+                <AnimatePresence mode="wait">
+                  <motion.div
+                    key={stepIndex}
+                    initial={{ scale: 0, rotate: -90 }}
+                    animate={{ scale: 1, rotate: 0 }}
+                    exit={{ scale: 0, rotate: 90 }}
+                    transition={{ duration: 0.3 }}
+                  >
+                    <IconComponent className="w-7 h-7 text-white" />
+                  </motion.div>
+                </AnimatePresence>
+              </div>
+            </div>
+          </div>
+
+          {/* Port name */}
+          <div className="text-center mb-6">
+            <h3 className="text-xl font-bold text-white mb-1">Analyzing {portName}</h3>
+            <p className="text-blue-300/70 text-sm">ORCA is gathering real-time marine intelligence</p>
+          </div>
+
+          {/* Current step text */}
+          <div className="min-h-[48px] flex items-center justify-center mb-6">
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={stepIndex}
+                initial={{ opacity: 0, y: 12 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -12 }}
+                transition={{ duration: 0.3 }}
+                className={`flex items-center gap-3 text-lg font-medium ${currentStep.color}`}
+              >
+                <IconComponent className="w-5 h-5 flex-shrink-0" />
+                <span>{currentStep.text.replace('...', dots.padEnd(3, '\u00A0'))}</span>
+              </motion.div>
+            </AnimatePresence>
+          </div>
+
+          {/* Progress dots */}
+          <div className="flex justify-center gap-2">
+            {LOADING_STEPS.map((_, i) => (
+              <div
+                key={i}
+                className={`h-1.5 rounded-full transition-all duration-500 ${
+                  i === stepIndex
+                    ? 'w-8 bg-gradient-to-r from-blue-400 to-cyan-400'
+                    : i < stepIndex
+                    ? 'w-3 bg-blue-500/50'
+                    : 'w-3 bg-white/15'
+                }`}
+              />
+            ))}
+          </div>
+        </div>
+      </motion.div>
+    </motion.div>
+  )
+}
+
 export function FishingHubSelector() {
   const { setActivePort, setShowFishingHub, setSelectedLocation, setMapViewState, setPortAnalysis,
     setRouteToPfz, setHighlightedPfzId, setLivePfzZones, addChatMessage, setSessionId, setCopilotOpen } = useStore()
   const [loading, setLoading] = useState(false)
+  const [selectedPortName, setSelectedPortName] = useState('')
 
   const handleSelectPort = async (port: any) => {
     setLoading(true)
+    setSelectedPortName(port.name)
     setActivePort(port)
     setSelectedLocation([port.lon, port.lat])
     setMapViewState({
@@ -183,6 +303,11 @@ export function FishingHubSelector() {
 
   return (
     <div className="fixed inset-0 z-[100] flex flex-col items-center justify-center bg-gradient-to-br from-slate-900/95 to-blue-950/95 p-4 overflow-y-auto">
+      {/* Loading Overlay */}
+      <AnimatePresence>
+        {loading && <LoadingOverlay portName={selectedPortName} />}
+      </AnimatePresence>
+
       <div className="max-w-6xl w-full mx-auto py-8">
         <div className="text-center mb-10">
           <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-ocean-500 to-ocean-600 rounded-2xl mb-4 shadow-lg shadow-blue-500/20">
@@ -206,7 +331,7 @@ export function FishingHubSelector() {
                   variants={item}
                   onClick={() => handleSelectPort(port)}
                   disabled={loading}
-                  className="text-left p-6 rounded-2xl bg-white/10 backdrop-blur-md border border-white/20 hover:bg-white/20 transition-all duration-300 group shadow-xl"
+                  className="text-left p-6 rounded-2xl bg-white/10 backdrop-blur-md border border-white/20 hover:bg-white/20 transition-all duration-300 group shadow-xl disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   <div className="flex justify-between items-start mb-4">
                     <div>
@@ -244,7 +369,7 @@ export function FishingHubSelector() {
                   variants={item}
                   onClick={() => handleSelectPort(port)}
                   disabled={loading}
-                  className="text-left p-6 rounded-2xl bg-white/10 backdrop-blur-md border border-white/20 hover:bg-white/20 transition-all duration-300 group shadow-xl"
+                  className="text-left p-6 rounded-2xl bg-white/10 backdrop-blur-md border border-white/20 hover:bg-white/20 transition-all duration-300 group shadow-xl disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   <div className="flex justify-between items-start mb-4">
                     <div>
@@ -273,7 +398,8 @@ export function FishingHubSelector() {
         <div className="mt-12 text-center pb-8">
           <button 
             onClick={() => setShowFishingHub(false)}
-            className="text-gray-400 hover:text-white transition-colors text-sm font-medium"
+            disabled={loading}
+            className="text-gray-400 hover:text-white transition-colors text-sm font-medium disabled:opacity-50"
           >
             Skip to Map →
           </button>
