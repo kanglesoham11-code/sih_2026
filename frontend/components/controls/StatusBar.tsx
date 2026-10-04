@@ -14,12 +14,17 @@ export function StatusBar() {
     queryKey: ['health'],
     queryFn: () => apiClient.getHealth(),
     refetchInterval: 30000, // 30 seconds
-    retry: false,
+    retry: 2,
+    retryDelay: 3000,
   })
 
   useEffect(() => {
-    if (health && !isError && demoMode) {
-      setDemoMode(false)
+    if (health && !isError) {
+      // Backend is reachable — exit demo mode
+      if (demoMode) setDemoMode(false)
+    } else if (isError && !demoMode) {
+      // Backend is unreachable — enter demo mode
+      setDemoMode(true)
     }
   }, [health, isError, demoMode, setDemoMode])
 

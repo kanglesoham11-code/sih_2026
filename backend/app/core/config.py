@@ -91,7 +91,7 @@ class Settings(BaseSettings):
     
     # CORS — stored as a plain string to avoid pydantic-settings JSON parse errors;
     # parsed into a list by the model_validator below.
-    CORS_ORIGINS: str = "http://localhost:3000,http://localhost:8000"
+    CORS_ORIGINS: str = "http://localhost:3000,http://localhost:8000,*"
     
     # Security
     SECRET_MANAGER: str = "env"  # env|vault|aws|gcp

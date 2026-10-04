@@ -167,8 +167,8 @@ export const useStore = create<AppStore>((set) => ({
   sidebarOpen: false,
   setSidebarOpen: (open) => set({ sidebarOpen: open }),
   
-  // Demo mode
-  demoMode: true,
+  // Demo mode — disabled by default in production (when NEXT_PUBLIC_API_URL is set)
+  demoMode: !process.env.NEXT_PUBLIC_API_URL,
   setDemoMode: (demo) => set({ demoMode: demo }),
 
   // Map click context (Map → Chat connection)
