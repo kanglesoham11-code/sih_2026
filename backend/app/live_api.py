@@ -680,11 +680,12 @@ class ChatResponseModel(BaseModel):
 # Store simple session context in memory
 _chat_sessions: Dict[str, List[Dict[str, str]]] = {}
 
-SYSTEM_PROMPT = """You are ORCA — an AI-powered Marine Intelligence Copilot.
+SYSTEM_PROMPT = """You are ORCA — a friendly, highly intelligent, and conversational Marine Intelligence Copilot.
 
 You help fishermen, maritime professionals, and anyone who asks questions about ocean conditions, weather safety, and marine activities.
 
 CRITICAL RULES:
+- Speak in fluent, natural, everyday human English. Do NOT sound like a robotic system, an automated weather report, or a rigid AI. Be warm, helpful, and conversational.
 - Give the user a SIMPLE, CLEAR conclusion. NOT technical readings.
 - The user does NOT understand SST, chlorophyll, salinity, PFZ acronyms, or scientific values.
 - Good answer: "Go to this area — it's the best fishing spot I found for you."
@@ -711,9 +712,10 @@ async def live_chat(request: ChatRequest):
 
     history = _chat_sessions[session_id]
 
-    # Build location context and Orchestrate Agents
+    # Build location context and Orchestrate Agents (Default to Sassoon Dock, Mumbai if no location)
     from app.services.orchestrator import orchestrate_chat
-    orchestration = await orchestrate_chat(request.message, request.location)
+    location_to_use = request.location or [72.8258, 18.9220]
+    orchestration = await orchestrate_chat(request.message, location_to_use)
     
     # Add user message to history
     history.append({"role": "user", "content": request.message})
@@ -761,20 +763,20 @@ async def live_chat(request: ChatRequest):
         intent = orchestration.get("intent", "general")
         
         if "CRITICAL" in risk_str:
-            assistant_msg = "🚫 **Do NOT go out to sea right now.** Dangerous weather conditions have been detected. Please stay in the harbor until conditions improve."
+            assistant_msg = "🚫 Oh no, it looks pretty dangerous out there right now! I'm seeing some very rough weather and high risks, so please stay safe in the harbor and don't head out to sea until things calm down."
         elif "HIGH" in risk_str:
-            assistant_msg = "⚠️ **Be very careful.** Weather conditions are rough right now. Only experienced fishermen with mechanized boats should venture out, and stay close to the shore."
+            assistant_msg = "⚠️ The weather is a bit rough today. Please be extremely careful! I'd strongly recommend staying close to the shore unless you are very experienced and have a large, well-equipped boat."
         elif intent in ('fishing', 'navigation') and pfz_count > 0 and live_zones:
             best = live_zones[0]
             assistant_msg = (
-                f"✅ **Good conditions for fishing!** I found {pfz_count} promising fishing areas near you. "
-                f"The best one is **{best.get('name', 'nearby')}** with a productivity score of {best.get('score', 'N/A')}.\n\n"
-                f"Check the map — I've highlighted the recommended zone and drawn the safest route for you."
+                f"✅ It's looking great out there! I've spotted {pfz_count} really good fishing areas nearby. "
+                f"Your best bet is going to be **{best.get('name', 'nearby')}** — it has a great productivity score of {best.get('score', 'N/A')}.\n\n"
+                f"I've highlighted the zone and drawn the safest route for you on the map. Good luck out there!"
             )
         elif intent == 'safety':
-            assistant_msg = f"✅ **Conditions appear safe** based on the latest available data. The current risk level is: {risk_str.replace('_', ' ').title()}. Always carry communication equipment when heading out."
+            assistant_msg = f"✅ Things are looking good and safe out there! Just remember to keep your communication gear handy whenever you head out. Safe travels!"
         else:
-            assistant_msg = f"Based on the latest conditions, the overall safety status is: **{risk_str.replace('_', ' ').title()}**. Please check the map for more details, or ask me a specific question."
+            assistant_msg = f"Based on what I'm seeing right now, the ocean looks fine. Have a look at the map for the latest updates, or feel free to ask me anything specific you need help with!"
 
     # Store assistant response
     history.append({"role": "assistant", "content": assistant_msg})
