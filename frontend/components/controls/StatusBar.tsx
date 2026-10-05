@@ -3,36 +3,33 @@
 import { useEffect } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { apiClient } from '@/lib/api-client'
-import { Activity, AlertCircle, CheckCircle, Clock } from 'lucide-react'
+import { Activity, CheckCircle, Clock } from 'lucide-react'
 import { formatTimeAgo } from '@/lib/utils'
 import { useStore } from '@/lib/store'
 
 export function StatusBar() {
-  const { demoMode, setDemoMode } = useStore()
+  const { setDemoMode } = useStore()
 
   const { data: health, isError } = useQuery({
     queryKey: ['health'],
     queryFn: () => apiClient.getHealth(),
     refetchInterval: 30000, // 30 seconds
-    retry: 2,
-    retryDelay: 3000,
+    retry: 3,
+    retryDelay: 5000,
   })
 
+  // Silently track backend connectivity — never show demo mode to user
   useEffect(() => {
     if (health && !isError) {
-      // Backend is reachable — exit demo mode
-      if (demoMode) setDemoMode(false)
-    } else if (isError && !demoMode) {
-      // Backend is unreachable — enter demo mode
-      setDemoMode(true)
+      setDemoMode(false)
     }
-  }, [health, isError, demoMode, setDemoMode])
+    // If backend unreachable, do NOT set demoMode — just keep trying silently
+  }, [health, isError, setDemoMode])
 
   const { data: sources } = useQuery({
     queryKey: ['sources'],
     queryFn: () => apiClient.getDataSources(),
     refetchInterval: 60000, // 1 minute
-    enabled: !demoMode,
   })
 
   const activeSources = sources?.filter(s => s.status === 'active').length || 0
@@ -43,10 +40,10 @@ export function StatusBar() {
                     flex items-center gap-4 text-sm">
       {/* Connection Status */}
       <div className="flex items-center gap-2">
-        {demoMode ? (
+        {!health && !isError ? (
           <>
-            <AlertCircle className="w-4 h-4 text-yellow-500" />
-            <span className="text-yellow-700 font-medium">Demo Mode</span>
+            <Activity className="w-4 h-4 text-blue-500 animate-pulse" />
+            <span className="text-blue-700 font-medium">Connecting...</span>
           </>
         ) : isError ? (
           <>
@@ -65,7 +62,7 @@ export function StatusBar() {
       <div className="w-px h-4 bg-gray-300" />
 
       {/* Data Sources */}
-      {!demoMode && sources && (
+      {sources && (
         <>
           <div className="flex items-center gap-2">
             <Activity className="w-4 h-4 text-blue-500" />

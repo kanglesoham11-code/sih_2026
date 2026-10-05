@@ -12,29 +12,12 @@ import { useStore } from '@/lib/store'
 import { Anchor } from 'lucide-react'
 
 export function MainDashboard() {
-  const { demoMode, setDemoMode, showFishingHub, setShowFishingHub } = useStore()
+  const { showFishingHub, setShowFishingHub } = useStore()
 
   return (
     <div className="relative w-screen h-screen overflow-hidden bg-gray-900">
-      {/* Demo Mode Banner */}
-      {demoMode && (
-        <div className="absolute top-0 left-0 right-0 bg-yellow-500 text-gray-900 
-                      px-4 py-2 text-center text-sm font-medium z-50 flex items-center 
-                      justify-center gap-4">
-          <span>
-            🌊 ORCA Demo Mode - Backend connection required for live data
-          </span>
-          <button
-            onClick={() => setDemoMode(false)}
-            className="bg-white px-3 py-1 rounded text-xs hover:bg-gray-100"
-          >
-            Try Connect
-          </button>
-        </div>
-      )}
-
-      {/* Main Map - 90% of viewport */}
-      <div className={`absolute inset-0 ${demoMode ? 'top-10' : 'top-0'}`}>
+      {/* Main Map - Full viewport */}
+      <div className="absolute inset-0 top-0">
         <MainMap />
       </div>
 

@@ -18,7 +18,7 @@ import {
 import { coordinateToString, formatTimestamp, getFreshnessColor, getFreshnessLabel } from '@/lib/utils'
 
 export function InfoPanel() {
-  const { selectedLocation, setSelectedLocation, demoMode, portAnalysis } = useStore()
+  const { selectedLocation, setSelectedLocation, portAnalysis } = useStore()
 
   const { data: observations, isLoading } = useQuery({
     queryKey: ['observations', selectedLocation],
@@ -30,7 +30,7 @@ export function InfoPanel() {
         radius_km: 50,
       })
     },
-    enabled: !!selectedLocation && !demoMode,
+    enabled: !!selectedLocation,
   })
 
   const queryClient = useQueryClient()
@@ -43,7 +43,7 @@ export function InfoPanel() {
         lon: selectedLocation[0],
       })
     },
-    enabled: !!selectedLocation && !demoMode,
+    enabled: !!selectedLocation,
   })
 
   const handleRouteToPfz = () => {
@@ -94,7 +94,7 @@ export function InfoPanel() {
 
   // Process real observations if available
   let displayData = { ...demoData }
-  if (!demoMode && observations && observations.length > 0) {
+  if (observations && observations.length > 0) {
     const oceanData = observations.find((o: any) => o.type === 'ocean_params')?.parameters || {}
     const weatherData = observations.find((o: any) => o.type === 'weather')?.parameters || {}
     const waveData = observations.find((o: any) => o.type === 'wave_data')?.parameters || {}
@@ -150,7 +150,7 @@ export function InfoPanel() {
 
         {/* Content */}
         <div className="flex-1 overflow-y-auto custom-scrollbar p-4 space-y-4">
-          {isLoading && !demoMode ? (
+          {isLoading ? (
             <div className="flex items-center justify-center py-8">
               <div className="spinner"></div>
               <span className="ml-2 text-sm text-gray-600">Loading data...</span>
@@ -264,14 +264,7 @@ export function InfoPanel() {
                 ) : (
                   <div className="bg-green-50 border border-green-200 rounded-lg p-3">
                     <div className="text-sm text-green-800">
-                      {demoMode ? (
-                        <>
-                          <div className="font-medium mb-1">Good fishing conditions</div>
-                          <div className="text-xs">
-                            Moderate chlorophyll levels detected. Expected species: Tuna, Mackerel.
-                          </div>
-                        </>
-                      ) : recommendations ? (
+                      {recommendations ? (
                         <div className="flex flex-col gap-3">
                           <div>{recommendations.summary}</div>
                           <button 
@@ -283,25 +276,19 @@ export function InfoPanel() {
                           </button>
                         </div>
                       ) : (
-                        <div className="text-gray-600">No advisory available</div>
+                        <>
+                          <div className="font-medium mb-1">Good fishing conditions</div>
+                          <div className="text-xs">
+                            Moderate chlorophyll levels detected. Expected species: Tuna, Mackerel.
+                          </div>
+                        </>
                       )}
                     </div>
                   </div>
                 )}
               </div>
 
-              {/* Demo Mode Notice */}
-              {demoMode && (
-                <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3">
-                  <div className="flex items-start gap-2">
-                    <AlertTriangle className="w-4 h-4 text-yellow-600 mt-0.5" />
-                    <div className="text-xs text-yellow-800">
-                      <div className="font-medium mb-1">Demo Data</div>
-                      <div>Connect to backend for real-time observations and forecasts.</div>
-                    </div>
-                  </div>
-                </div>
-              )}
+
             </>
           )}
         </div>

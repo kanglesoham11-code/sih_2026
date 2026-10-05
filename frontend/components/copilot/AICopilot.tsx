@@ -29,7 +29,6 @@ export function AICopilot() {
     setSessionId,
     selectedLocation,
     setSelectedLocation,
-    demoMode,
     setMapViewState,
     setRouteToPfz,
     setHighlightedPfzId,
@@ -234,18 +233,6 @@ export function AICopilot() {
 
       {!isMinimized && (
         <>
-          {/* Demo Mode Banner */}
-          {demoMode && (
-            <div className="bg-yellow-50 border-b border-yellow-200 p-3 text-sm">
-              <div className="flex items-center gap-2 text-yellow-800">
-                <AlertTriangle className="w-4 h-4" />
-                <span className="font-medium">Demo Mode</span>
-              </div>
-              <p className="text-xs text-yellow-700 mt-1">
-                Backend not connected. Responses are simulated.
-              </p>
-            </div>
-          )}
 
           {/* Active Starting Port */}
           {activePort && (
