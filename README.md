@@ -1,505 +1,220 @@
-<p align="center">
-  <img src="https://img.shields.io/badge/ORCA-Marine%20Intelligence-0ea5e9?style=for-the-badge&logo=data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9IndoaXRlIiBzdHJva2Utd2lkdGg9IjIiPjxwYXRoIGQ9Ik0yIDEyaDIwIi8+PHBhdGggZD0iTTEyIDJhMTUuMyAxNS4zIDAgMCAxIDQgMTAgMTUuMyAxNS4zIDAgMCAxLTQgMTAgMTUuMyAxNS4zIDAgMCAxLTQtMTAgMTUuMyAxNS4zIDAgMCAxIDQtMTB6Ii8+PC9zdmc+" alt="ORCA Badge"/>
-</p>
+# ORCA: Marine EcoSystem Reasoning with Collaborative Agents
 
-<h1 align="center">🐋 ORCA — Ocean Reconnaissance & Catch Advisory</h1>
+> **Smart India Hackathon 2026** · Problem Statement **SIH26176** · Theme: Space Technology · Category: Software  
+> **Team GODSPLAN** · Team ID **158806**
 
-<p align="center">
-  <b>AI-Powered Marine Intelligence Platform for Indian Fishermen</b><br/>
-  Smart Innovation Hackathon (SIH) 2026
-</p>
-
-<p align="center">
-  <img src="https://img.shields.io/badge/Next.js-14-black?logo=next.js" alt="Next.js"/>
-  <img src="https://img.shields.io/badge/FastAPI-0.109-009688?logo=fastapi" alt="FastAPI"/>
-  <img src="https://img.shields.io/badge/Python-3.12+-3776AB?logo=python&logoColor=white" alt="Python"/>
-  <img src="https://img.shields.io/badge/MapLibre-4.7-blue?logo=mapbox" alt="MapLibre"/>
-  <img src="https://img.shields.io/badge/PostgreSQL-PostGIS-336791?logo=postgresql" alt="PostgreSQL"/>
-  <img src="https://img.shields.io/badge/Groq-LLM-orange" alt="Groq"/>
-</p>
+[![Live Demo](https://img.shields.io/badge/Live_Demo-Vercel-black?logo=vercel)](https://sih-2026-eight-sigma.vercel.app)
+[![Demo Video](https://img.shields.io/badge/Demo_Video-YouTube-red?logo=youtube)](https://youtu.be/Bw5V4UZhub4)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
 ---
 
-## 📋 Table of Contents
+## Problem
 
-- [Overview](#-overview)
-- [Key Features](#-key-features)
-- [System Architecture](#-system-architecture)
-- [Workflow Pipeline](#-workflow-pipeline)
-- [Tech Stack](#-tech-stack)
-- [Project Structure](#-project-structure)
-- [Quick Start](#-quick-start)
-- [Scientific Engine](#-scientific-engine)
-- [API Reference](#-api-reference)
-- [Indian EEZ Boundary Enforcement](#-indian-eez-boundary-enforcement)
-- [Screenshots](#-screenshots)
-- [Team](#-team)
+Indian fishermen receive fragmented, delayed ocean advisories from multiple agencies (INCOIS, IMD, MOSDAC). There is no single platform that combines live weather, sea-state, and satellite oceanography to give a simple, evidence-backed **GO / CAUTION / NO-GO** safety verdict before they set sail.
 
----
+## Solution
 
-## 🌊 Overview
+ORCA is an AI-powered marine intelligence platform that:
 
-**ORCA** is an intelligent marine advisory system that helps Indian fishermen find the **best fishing zones** using real-time oceanographic data, satellite-grade scientific calculations, and an AI chatbot — all within **India's international maritime boundaries**.
-
-The system combines **live weather/ocean data** from Open-Meteo, Copernicus, MOSDAC, and INCOIS with a **deterministic scientific engine** (based on the ORCA Scientific Rulebook) to compute Potential Fishing Zones (PFZ), then presents results through a conversational AI interface connected to an interactive map.
-
-> **The fisherman asks a simple question. ORCA does all the science and gives a clear answer.**
+1. **Fetches live ocean and weather data** (currently from Open-Meteo; INCOIS/IMD/Copernicus adapters are roadmap).
+2. **Computes Potential Fishing Zones (PFZ)** using deterministic SST-gradient and chlorophyll heuristics from the INCOIS Scientific Rulebook.
+3. **Calculates a safety risk verdict** (GO / CAUTION / NO-GO) based on wave height and wind speed thresholds.
+4. **Explains results in plain language** via a Groq-powered AI chat copilot — no technical jargon.
+5. **Displays everything on an interactive marine map** (MapLibre GL JS) with selectable data layers.
 
 ---
 
-## ✨ Key Features
+## What Works Today vs Roadmap
 
-| Feature | Description |
-|---------|-------------|
-| 🤖 **AI Copilot Chatbot** | Natural language interface — ask "Where should I fish?" and get actionable advice |
-| 🗺️ **Interactive Ocean Map** | MapLibre-powered map with real-time ocean data layers (SST, Chlorophyll, Salinity, Waves, Wind) |
-| 🎯 **PFZ Zone Detection** | Scientific computation of Potential Fishing Zones using INCOIS methodology |
-| 🛣️ **Sea-Only Route Planning** | Water-only navigation paths from any Mumbai port to the best fishing zone |
-| 🛡️ **Safety Override System** | IMD-grade safety checks — dangerous conditions override all fishing recommendations |
-| 🇮🇳 **Indian EEZ Enforcement** | All fishing zones strictly within India's international maritime boundaries |
-| 📡 **Live Data Integration** | Real-time SST, wave height, wind speed, chlorophyll from Open-Meteo marine API |
-| 🔬 **Deterministic Science** | All calculations follow the ORCA Scientific Rulebook — LLM never invents data |
-| 🏗️ **Land Masking** | Ocean data layers only render over water — land areas are transparent |
-| ⚓ **Multi-Port Support** | 9 Mumbai ports with port-specific water-channel routing |
+_Based on [docs/AUDIT.md](docs/AUDIT.md)._
 
----
-
-## 🏗️ System Architecture
-
-```
-┌─────────────────────────────────────────────────────────────────────┐
-│                        ORCA ARCHITECTURE                            │
-├─────────────────────────────────────────────────────────────────────┤
-│                                                                     │
-│  ┌───────────────────────────────────────────────────────────────┐  │
-│  │                    FRONTEND (Next.js 14)                      │  │
-│  │  ┌──────────┐  ┌──────────┐  ┌──────────┐  ┌──────────────┐  │  │
-│  │  │ MainMap  │  │AICopilot │  │InfoPanel │  │ StatusBar    │  │  │
-│  │  │(MapLibre)│  │(Chatbot) │  │(Details) │  │(Live Status) │  │  │
-│  │  └────┬─────┘  └────┬─────┘  └────┬─────┘  └──────────────┘  │  │
-│  │       │              │              │                          │  │
-│  │  ┌────┴──────────────┴──────────────┴─────────────────────┐   │  │
-│  │  │              Zustand Global State Store                │   │  │
-│  │  │  (map state, layers, routes, PFZ zones, chat history)  │   │  │
-│  │  └────────────────────────┬───────────────────────────────┘   │  │
-│  └───────────────────────────┼───────────────────────────────────┘  │
-│                              │ HTTP/REST                            │
-│  ┌───────────────────────────┼───────────────────────────────────┐  │
-│  │                  BACKEND (FastAPI + Uvicorn)                   │  │
-│  │                           │                                    │  │
-│  │  ┌────────────────────────┴────────────────────────────────┐  │  │
-│  │  │               ORCHESTRATOR (orchestrator.py)             │  │  │
-│  │  │  Intent Detection → Data Fetch → Science → LLM → Map    │  │  │
-│  │  └──┬──────────┬──────────┬──────────┬──────────┬──────────┘  │  │
-│  │     │          │          │          │          │              │  │
-│  │  ┌──┴──┐  ┌───┴───┐  ┌──┴───┐  ┌──┴──┐  ┌───┴────┐        │  │
-│  │  │Live │  │Science│  │ EEZ  │  │Groq │  │ Risk   │        │  │
-│  │  │Data │  │Engine │  │Check │  │ LLM │  │Safety  │        │  │
-│  │  │Fetch│  │(ORCA  │  │(India│  │(NLP │  │Engine  │        │  │
-│  │  │     │  │Rules) │  │EEZ)  │  │Layer│  │        │        │  │
-│  │  └──┬──┘  └───┬───┘  └──┬───┘  └──┬──┘  └───┬────┘        │  │
-│  │     │         │         │         │          │              │  │
-│  └─────┼─────────┼─────────┼─────────┼──────────┼──────────────┘  │
-│        │         │         │         │          │                  │
-│  ┌─────┴─────────┴─────────┴─────────┴──────────┴──────────────┐  │
-│  │                    EXTERNAL DATA SOURCES                     │  │
-│  │  Open-Meteo Marine API  │  Copernicus  │  MOSDAC  │  INCOIS  │  │
-│  └─────────────────────────────────────────────────────────────┘  │
-│                                                                     │
-│  ┌─────────────────────────────────────────────────────────────┐  │
-│  │                    DATA PERSISTENCE                          │  │
-│  │     PostgreSQL + PostGIS     │     Redis Cache               │  │
-│  └─────────────────────────────────────────────────────────────┘  │
-└─────────────────────────────────────────────────────────────────────┘
-```
+| Feature | Status | Notes |
+|---------|--------|-------|
+| Interactive marine map with data layers | ✅ Working | MapLibre GL JS, SST/Chl/Wind/Salinity/PFZ layers |
+| AI Chat Copilot | ✅ Working | Groq LLM; requires `GROQ_API_KEY` |
+| PFZ zone computation | ✅ Working | Deterministic engine from SST + CHL gradients |
+| Deterministic risk engine | ✅ Working | Wave >4m or Wind >60km/h → CRITICAL |
+| Hub/Port selector (10 Indian ports) | ✅ Working | Hardcoded port list with coordinates |
+| Live wave, wind, temperature data | ✅ Working | Open-Meteo Marine + Weather APIs |
+| SST values | ⚠️ Derived | Estimated from air temp (not satellite SST) |
+| Chlorophyll-a values | ⚠️ Derived | Heuristic from wave mixing + coastal proximity |
+| Salinity values | ⚠️ Derived | Heuristic from humidity + latitude |
+| Ocean current values | ⚠️ Derived | Ekman transport estimate from wind |
+| INCOIS/IMD/Copernicus/MOSDAC data | 📋 Roadmap | Connector skeletons exist; no live data |
+| Vessel-class safety thresholds | 📋 Roadmap | Currently one threshold for all vessels |
+| Multi-agent orchestration (LangGraph) | 📋 Roadmap | Currently a single orchestrator function |
+| BHASHINI multilingual translation | 📋 Roadmap | Not implemented |
+| Voice input/output | 📋 Roadmap | Not implemented |
+| Evidence panel with provenance | 📋 Roadmap | Not implemented |
+| Decision audit log | 📋 Roadmap | Not implemented |
 
 ---
 
-## 🔄 Workflow Pipeline
+## Data Sources
 
-### End-to-End: User Question → Map Visualization
+| Source | Status | What It Provides |
+|--------|--------|------------------|
+| **Open-Meteo Marine API** | ✅ Live | Wave height, direction, period, swell |
+| **Open-Meteo Weather API** | ✅ Live | Wind speed/direction, temperature, humidity, pressure |
+| **Groq LLM API** | ✅ Live | Natural-language explanations of conditions |
+| INCOIS ERDDAP | 📋 Roadmap | SST, chlorophyll (connector skeleton exists) |
+| IMD Weather API | 📋 Roadmap | Official Indian weather warnings |
+| Copernicus Marine | 📋 Roadmap | Global ocean model data |
+| MOSDAC (ISRO) | 📋 Roadmap | Satellite telemetry, cloud cover |
+
+---
+
+## Architecture
 
 ```mermaid
-flowchart TD
-    A["🧑 Fisherman asks:\n'Where should I fish today?'"] --> B["🤖 AI Copilot\n(AICopilot.tsx)"]
-    B --> C["📡 Backend API\n/api/v1/chat"]
-    C --> D["🧠 Orchestrator\n(Intent Detection)"]
-    
-    D --> E{"Intent?"}
-    E -->|fishing/navigation| F["📊 Live Data Fetch\n(Open-Meteo Marine API)"]
-    E -->|weather| G["🌤️ Weather Context"]
-    E -->|safety| H["⚠️ Risk Assessment"]
-    
-    F --> I["🔬 Scientific Engine\n(ORCA Rulebook)"]
-    
-    I --> I1["SST Gradient\n|∇SST| = √(∂SST/∂x² + ∂SST/∂y²)"]
-    I --> I2["Chlorophyll Front\nlog₁₀(CHL) gradient"]
-    I --> I3["Fishing Suitability\nSST·0.35 + CHL·0.40 + Front + Current"]
-    I --> I4["Safety Override\nWave > 4m → Score = 0"]
-    
-    I1 & I2 & I3 & I4 --> J["🇮🇳 EEZ Boundary Check\n(Point-in-Polygon)"]
-    
-    J -->|Inside Indian Waters| K["✅ Valid PFZ Zones\n(Top 5 by score)"]
-    J -->|Outside Border| L["❌ Rejected"]
-    
-    K --> M["🗣️ Groq LLM\n(Explain results simply)"]
-    M --> N["📋 Map Actions\n(route_to_pfz, show_zones,\nhighlight_pfz, fly_to)"]
-    
-    N --> O["🗺️ Frontend Map\n(MapLibre GL)"]
-    O --> P["🎯 PFZ Zones Rendered\n+ Sea Route Drawn\n+ Camera Flies To Area"]
-    
-    style A fill:#0ea5e9,color:white
-    style I fill:#8b5cf6,color:white
-    style J fill:#f59e0b,color:white
-    style K fill:#22c55e,color:white
-    style L fill:#ef4444,color:white
-    style P fill:#0ea5e9,color:white
+graph TB
+    subgraph Frontend ["Frontend (Next.js 14 + MapLibre GL JS)"]
+        UI[Dashboard UI]
+        Map[Interactive Map]
+        Chat[AI Chat Copilot]
+        Hub[Hub/Port Selector]
+    end
+
+    subgraph Backend ["Backend (FastAPI)"]
+        API[Live API Router]
+        Orch[Orchestrator]
+        Risk[Risk Safety Engine]
+        PFZ[PFZ Calculator]
+        Sci[Scientific Engine]
+    end
+
+    subgraph DataSources ["External APIs"]
+        OM_M[Open-Meteo Marine]
+        OM_W[Open-Meteo Weather]
+        Groq[Groq LLM]
+    end
+
+    UI --> API
+    Chat --> API
+    API --> Orch
+    Orch --> Risk
+    Orch --> PFZ
+    PFZ --> Sci
+    Orch --> OM_M
+    Orch --> OM_W
+    Orch --> Groq
 ```
 
-### Detailed Scientific Pipeline
+### Backend Modules
 
-```
-User Query
-    │
-    ▼
-┌──────────────────────────────────────────────────────────────┐
-│ 1. INTENT DETECTION                                          │
-│    Keywords → fishing | navigation | weather | safety        │
-└──────────────────────────────┬───────────────────────────────┘
-                               │
-                               ▼
-┌──────────────────────────────────────────────────────────────┐
-│ 2. LIVE DATA ACQUISITION                                     │
-│    Open-Meteo Marine API → SST, Wave Height, Wind Speed      │
-│    Open-Meteo Weather API → Air Temp, Wind Direction         │
-│    (Copernicus/MOSDAC for production deployment)             │
-└──────────────────────────────┬───────────────────────────────┘
-                               │
-                               ▼
-┌──────────────────────────────────────────────────────────────┐
-│ 3. SCIENTIFIC ENGINE (Deterministic — No AI Guessing)        │
-│                                                              │
-│    ┌─────────────────┐  ┌──────────────────┐                │
-│    │ SST Gradient     │  │ Chlorophyll Front │                │
-│    │ (Rulebook §2-3)  │  │ (Rulebook §4-5)  │                │
-│    └────────┬─────────┘  └────────┬─────────┘                │
-│             │                     │                          │
-│    ┌────────┴─────────────────────┴─────────┐                │
-│    │      Fishing Suitability Model          │                │
-│    │      (Rulebook §16-17)                  │                │
-│    │                                         │                │
-│    │  Score = SST_score × 0.35               │                │
-│    │       + CHL_score × 0.40                │                │
-│    │       + Front_bonus                     │                │
-│    │       + Current_bonus                   │                │
-│    │                                         │                │
-│    │  Safety Override:                       │                │
-│    │    Wave > 4m  → Score = 0 (UNSAFE)      │                │
-│    │    Wind > 50  → Score = 0 (GALE)        │                │
-│    └────────┬────────────────────────────────┘                │
-│             │                                                │
-│    ┌────────┴────────────────────────────────┐                │
-│    │      India EEZ Boundary Filter          │                │
-│    │      (Ray-casting point-in-polygon)      │                │
-│    │      Only zones inside Indian waters     │                │
-│    └────────┬────────────────────────────────┘                │
-│             │                                                │
-│    ┌────────┴────────────────────────────────┐                │
-│    │      PFZ Zone Ranking                   │                │
-│    │      Sort by score → Return top 5       │                │
-│    └─────────────────────────────────────────┘                │
-└──────────────────────────────┬───────────────────────────────┘
-                               │
-                               ▼
-┌──────────────────────────────────────────────────────────────┐
-│ 4. LLM EXPLANATION LAYER (Groq)                              │
-│    Takes computed PFZ data + weather context                 │
-│    Generates SIMPLE, non-technical explanation               │
-│    "Go 15km southwest — best fishing area today"             │
-│    LLM NEVER invents coordinates or readings                 │
-└──────────────────────────────┬───────────────────────────────┘
-                               │
-                               ▼
-┌──────────────────────────────────────────────────────────────┐
-│ 5. MAP ACTIONS → FRONTEND                                    │
-│    • fly_to: Camera animates to fishing area                 │
-│    • show_pfz_zones: Render all 5 PFZ polygons on map       │
-│    • route_to_pfz: Draw sea-only route from port to best PFZ│
-│    • highlight_pfz: Highlight the #1 recommended zone        │
-└──────────────────────────────────────────────────────────────┘
-```
+| Module | File | Purpose |
+|--------|------|---------|
+| Live API | `backend/app/live_api.py` | All HTTP endpoints (health, sources, observations, PFZ, chat, recommendations, ports) |
+| Orchestrator | `backend/app/services/orchestrator.py` | Fetches live data, computes PFZ, formats LLM context, determines risk |
+| Scientific Engine | `backend/app/services/scientific_engine.py` | PFZ zone calculator using SST gradients, thermal fronts, species habitats |
+| Risk Engine | `orchestrator.py:RiskSafetyEngine` | Deterministic GO/CAUTION/NO-GO based on wave height and wind speed |
+| Config | `backend/app/core/config.py` | Environment variable management via Pydantic Settings |
 
-### Sea Route Generation
+### Safety Model
 
-```
-Port Location → Classify Port → Select Water Waypoints → Interpolate → Render
+The risk engine in `RiskSafetyEngine.calculate_risk()` uses these thresholds:
 
-EAST-SIDE PORTS (Sassoon Dock, Gateway, Bhaucha Dhakka):
-  Port → Harbor Channel South → South of Colaba (open sea) → Open Sea SW → PFZ
+| Condition | Result |
+|-----------|--------|
+| Wave height > 4.0m **OR** Wind speed > 60 km/h | `CRITICAL_RISK — DO NOT SAIL` |
+| Wave height > 2.5m **OR** Wind speed > 40 km/h | `HIGH_RISK — CAUTION ADVISED` |
+| Below both thresholds | `SAFE_FOR_SAILING` |
 
-WEST-SIDE PORTS (Marine Drive, Worli):
-  Port → Straight West to Open Sea → PFZ
-
-NORTH PORTS (Juhu, Bhati):
-  Port → West to Open Sea → PFZ
-
-Every interpolated point is verified to be over water.
-```
+These are **not** vessel-class-specific. Vessel-class differentiation (traditional raft vs. deep-sea trawler) is planned for the next iteration.
 
 ---
 
-## 🛠️ Tech Stack
-
-### Frontend
-| Technology | Version | Purpose |
-|-----------|---------|---------|
-| Next.js | 14.2 | React framework with SSR |
-| React | 18.3 | UI library |
-| MapLibre GL | 4.7 | Open-source map rendering |
-| react-map-gl | 7.1 | React bindings for MapLibre |
-| Zustand | 4.5 | Global state management |
-| TanStack Query | 5.56 | Server state & data fetching |
-| Framer Motion | 11.5 | Animations & transitions |
-| Recharts | 2.12 | Data visualization charts |
-| Lucide React | 0.441 | Icon library |
-
-### Backend
-| Technology | Version | Purpose |
-|-----------|---------|---------|
-| FastAPI | 0.109 | Async REST API framework |
-| Uvicorn | 0.27 | ASGI server |
-| Groq SDK | 0.11 | LLM inference (Llama 3) |
-| SQLAlchemy | 2.0 | ORM + async database |
-| GeoAlchemy2 | 0.14 | PostGIS spatial queries |
-| HTTPX | 0.26 | Async HTTP client |
-| NumPy | 1.26 | Scientific computation |
-| xarray | 2024.1 | Multidimensional ocean data |
-| Shapely | 2.0 | Geometric operations |
-
-### Infrastructure
-| Technology | Purpose |
-|-----------|---------|
-| PostgreSQL + PostGIS | Spatial database for zones, ports, geospatial queries |
-| Redis | Caching layer for API responses |
-| Docker Compose | Container orchestration |
-| OpenStreetMap | Base map tiles |
-
----
-
-## 📁 Project Structure
-
-```
-SIH_2026/
-├── 📂 backend/                        # Python FastAPI Backend
-│   ├── 📂 app/
-│   │   ├── 📂 api/                    # REST API endpoints
-│   │   │   └── v1/
-│   │   │       ├── chat.py            # /api/v1/chat — AI copilot endpoint
-│   │   │       ├── observations.py    # /api/v1/observations — ocean data
-│   │   │       ├── fishing_hubs.py    # /api/v1/fishing-hubs — port data
-│   │   │       ├── pfz_zones.py       # /api/v1/pfz-zones — PFZ data
-│   │   │       └── warnings.py        # /api/v1/warnings — safety alerts
-│   │   ├── 📂 core/                   # Configuration & setup
-│   │   │   ├── config.py              # Environment configuration
-│   │   │   ├── database.py            # PostgreSQL + PostGIS connection
-│   │   │   └── logging.py            # Structured logging
-│   │   ├── 📂 models/                 # SQLAlchemy ORM models
-│   │   │   ├── fishing_hub.py         # Port/harbor model
-│   │   │   ├── pfz_zones.py           # PFZ zone model with PostGIS geometry
-│   │   │   └── observation.py         # Ocean observation model
-│   │   ├── 📂 services/              # Business logic
-│   │   │   ├── orchestrator.py        # 🧠 Main pipeline coordinator
-│   │   │   ├── scientific_engine.py   # 🔬 ORCA physics engine
-│   │   │   ├── groq_service.py        # LLM integration (Groq API)
-│   │   │   └── data_fetcher.py        # Live data from APIs
-│   │   └── main.py                    # FastAPI application entry point
-│   ├── 📂 alembic/                    # Database migrations
-│   └── requirements.txt               # Python dependencies
-│
-├── 📂 frontend/                       # Next.js 14 Frontend
-│   ├── 📂 app/                        # Next.js App Router
-│   │   ├── layout.tsx                 # Root layout with providers
-│   │   ├── page.tsx                   # Main application page
-│   │   └── globals.css                # Global styles
-│   ├── 📂 components/
-│   │   ├── 📂 map/
-│   │   │   └── MainMap.tsx            # 🗺️ MapLibre map with all layers
-│   │   ├── 📂 copilot/
-│   │   │   └── AICopilot.tsx          # 🤖 Chat interface
-│   │   ├── 📂 panels/
-│   │   │   ├── InfoPanel.tsx          # Side panel with port/zone details
-│   │   │   └── FishingHubSelector.tsx # Port selection dropdown
-│   │   ├── 📂 controls/
-│   │   │   ├── LayerControl.tsx       # Toggle ocean data layers
-│   │   │   └── StatusBar.tsx          # Connection status indicator
-│   │   └── 📂 providers/
-│   │       └── QueryProvider.tsx      # TanStack Query provider
-│   ├── 📂 lib/
-│   │   ├── store.ts                   # Zustand global state
-│   │   └── api-client.ts             # Backend API client
-│   └── package.json
-│
-├── 📂 docs/                           # Documentation
-├── 📂 scripts/                        # Setup & deployment scripts
-├── 📂 monitoring/                     # Prometheus + Grafana configs
-├── docker-compose.yml                 # Full stack containerization
-├── .env.example                       # Environment template
-└── ORCA_Scientific_Ocean_Fishing_Reasoning_Rulebook.pdf
-```
-
----
-
-## 🚀 Quick Start
+## Getting Started
 
 ### Prerequisites
 
-- **Node.js** 18+ & **npm**
-- **Python** 3.12+
-- **PostgreSQL** 15+ with PostGIS (optional — system works without it)
+- Node.js 18+ and npm
+- Python 3.10+
+- (Optional) PostgreSQL 14+ with PostGIS for database features
+- A [Groq API key](https://console.groq.com/) for the AI chat
 
-### 1. Clone & Install
+### 1. Clone and configure
 
 ```bash
 git clone https://github.com/kanglesoham11-code/sih_2026.git
 cd sih_2026
+cp .env.example .env
+# Edit .env and add your GROQ_API_KEY
 ```
 
-### 2. Backend Setup
+### 2. Backend
 
 ```bash
 cd backend
 python -m venv venv
-venv\Scripts\activate          # Windows
+
+# Windows
+venv\Scripts\activate
+# macOS/Linux
+source venv/bin/activate
+
 pip install -r requirements.txt
+uvicorn app.main:app --reload --port 8000
 ```
 
-Create `.env` in the root directory:
-```env
-GROQ_API_KEY=your_groq_api_key
-DATABASE_URL=postgresql+asyncpg://user:pass@localhost:5433/orca
-ENVIRONMENT=development
-```
-
-### 3. Frontend Setup
+### 3. Frontend
 
 ```bash
 cd frontend
 npm install
-```
-
-Create `frontend/.env.local`:
-```env
-NEXT_PUBLIC_API_URL=http://localhost:8000
-```
-
-### 4. Run
-
-```bash
-# Terminal 1 — Backend
-cd backend
-python -m uvicorn app.main:app --host 0.0.0.0 --port 8000
-
-# Terminal 2 — Frontend
-cd frontend
 npm run dev
 ```
 
-Open **http://localhost:3000** in your browser.
+Open [http://localhost:3000](http://localhost:3000).
+
+### Environment Variables
+
+| Variable | Required | Description |
+|----------|----------|-------------|
+| `GROQ_API_KEY` | Yes | Groq API key for AI chat |
+| `DATABASE_URL` | No | PostgreSQL connection string (in-memory fallback if missing) |
+| `ALLOWED_ORIGINS` | No | Comma-separated CORS origins |
+| `NEXT_PUBLIC_API_URL` | Yes (frontend) | Backend API URL (default: `http://localhost:8000`) |
+| `APP_ENV` | No | `development` or `production` |
+
+### API Endpoints
+
+| Method | Path | Description |
+|--------|------|-------------|
+| GET | `/health` | Health check |
+| GET | `/api/sources` | Data source status |
+| GET | `/api/observations?lat=&lon=` | Live ocean + weather data |
+| GET | `/api/pfz?min_lat=&max_lat=&min_lon=&max_lon=` | Potential Fishing Zones |
+| POST | `/api/chat` | AI chat (JSON body: `{message, session_id?, location?}`) |
+| GET | `/api/recommendations?lat=&lon=` | Fishing recommendations |
+| GET | `/api/ports` | List of fishing ports |
+| GET | `/api/port-analysis?lat=&lon=` | Deep port analysis with route |
 
 ---
 
-## 🔬 Scientific Engine
+## Team
 
-The scientific engine (`backend/app/services/scientific_engine.py`) implements all formulas from the **ORCA Scientific Ocean Fishing Reasoning Rulebook**:
+> **TODO: Add team member names and roles here.**
 
-| Module | Rulebook Section | Formula |
-|--------|-----------------|---------|
-| `SSTGradientEngine` | §2-3 | `\|∇SST\| = √((∂SST/∂x)² + (∂SST/∂y)²)` |
-| `ChlorophyllEngine` | §4-5 | `log₁₀(CHL + ε)` normalization + gradient |
-| `OceanCurrentEngine` | §7-11 | Vorticity `ζ = ∂v/∂x − ∂u/∂y`, Okubo-Weiss `W = Sn² + Ss² − ζ²` |
-| `UpwellingEngine` | §12 | Ekman transport `M = τ / (ρ_w · f)`, multi-indicator detection |
-| `FishingSuitabilityModel` | §16-17 | Weighted score with safety override |
-| `PFZCalculator` | §24 | Full pipeline: SST + CHL + fronts + safety → ranked zones |
-| `IndiaEEZBoundary` | — | Ray-casting point-in-polygon for EEZ enforcement |
-
-### Anti-Hallucination Rule
-The LLM (Groq) is **strictly prohibited** from generating coordinates, readings, or scientific values. It only **explains** the deterministic results from the scientific engine in simple language.
+Team GODSPLAN — Smart India Hackathon 2026
 
 ---
 
-## 📡 API Reference
+## Limitations
 
-| Endpoint | Method | Description |
-|----------|--------|-------------|
-| `/api/v1/chat` | POST | AI copilot — accepts message + location, returns response + map actions |
-| `/api/v1/observations` | GET | Current ocean observations (SST, CHL, waves, wind) |
-| `/api/v1/pfz-zones` | GET | Predicted fishing zones with scores |
-| `/api/v1/fishing-hubs` | GET | List of fishing ports/harbors |
-| `/api/v1/warnings` | GET | Active weather/safety warnings |
-| `/health` | GET | Service health check |
-
-### Chat API Example
-
-```json
-// POST /api/v1/chat
-{
-  "message": "Where should I fish today?",
-  "location": [72.8333, 18.9067]
-}
-
-// Response
-{
-  "response": "Head 12km southwest of Sassoon Dock...",
-  "map_actions": [
-    { "type": "fly_to", "longitude": 72.83, "latitude": 18.9 },
-    { "type": "route_to_pfz", "start": [72.83, 18.9], "end": [72.71, 18.85] },
-    { "type": "show_pfz_zones", "zones": [...] },
-    { "type": "highlight_pfz", "pfz_id": "pfz-offshore-west" }
-  ]
-}
-```
+- **Prototype scope**: Focused on the Mumbai/Maharashtra coastal area. Pan-India coverage is roadmap.
+- **Data latency**: Open-Meteo data updates hourly. Real INCOIS PFZ advisories are daily.
+- **SST, chlorophyll, salinity**: Currently derived from proxy calculations, not satellite observations.
+- **Free-tier hosting**: Backend on Render free tier may have ~30s cold-start delays.
+- **Single safety threshold**: One set of wave/wind limits for all vessel types.
 
 ---
 
-## 🇮🇳 Indian EEZ Boundary Enforcement
+## License
 
-All Potential Fishing Zones are **strictly constrained** within India's international maritime boundaries using a ray-casting point-in-polygon algorithm.
-
-The boundary polygon matches the **actual border line visible on OpenStreetMap nautical charts**, covering:
-
-- **West Coast (Arabian Sea)**: Gujarat → Maharashtra → Goa → Karnataka → Kerala → Kanyakumari
-- **East Coast (Bay of Bengal)**: Kanyakumari → Tamil Nadu → Andhra Pradesh → Odisha → West Bengal
-
-```python
-# Every candidate zone is checked:
-if not IndiaEEZBoundary.is_within_indian_eez(zone_lon, zone_lat):
-    continue  # Zone rejected — outside Indian waters
-```
+[MIT](LICENSE)
 
 ---
 
-## 🖥️ Ocean Data Layers
-
-| Layer | Data Source | Visualization |
-|-------|-----------|---------------|
-| 🌡️ Sea Surface Temperature (SST) | Open-Meteo Marine | Scattered dots (blue → yellow → red) |
-| 🌿 Chlorophyll-a | Copernicus/MOSDAC | Scattered dots (dark → green → red) |
-| 🧂 Salinity | INCOIS | Scattered dots (light cyan → dark teal) |
-| 🌊 Wave Height | Open-Meteo Marine | Scattered dots (light → indigo → dark) |
-| 💨 Wind Speed | Open-Meteo Weather | Scattered dots (light → purple → dark) |
-| 🎯 PFZ Zones | Scientific Engine | Animated polygon boundaries |
-| 🛣️ Route | Route Engine | Dashed red line (sea-only path) |
-
-All layers use **land masking** — data points only render over water (transparent on land).
-
----
-
-## 👥 Team
-
-Built for **Smart India Hackathon (SIH) 2026** 🇮🇳
-
----
-
-<p align="center">
-  <b>ORCA — Because every fisherman deserves the power of satellite intelligence.</b>
-</p>
+<sub>Built for Smart India Hackathon 2026 · Problem Statement SIH26176 · Theme: Space Technology</sub>
