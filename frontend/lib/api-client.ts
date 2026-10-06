@@ -4,12 +4,16 @@ export interface ChatMessage {
   role: 'user' | 'assistant'
   content: string
   timestamp: string
+  evidence?: any[]
+  agent_trace?: any[]
 }
 
 export interface ChatRequest {
   message: string
   session_id?: string
   location?: [number, number]
+  vessel_class?: string
+  cyclone_active?: boolean
 }
 
 export interface ChatResponse {
@@ -17,6 +21,8 @@ export interface ChatResponse {
   session_id: string
   suggestions?: string[]
   map_actions?: any[]
+  evidence?: any[]
+  agent_trace?: any[]
 }
 
 export interface HealthStatus {

@@ -80,9 +80,9 @@ interface AppStore {
 export const useStore = create<AppStore>((set) => ({
   // Map state - centered on India's coastline
   mapViewState: {
-    longitude: 78.9629,
-    latitude: 20.5937,
-    zoom: 5,
+    longitude: 72.8258,
+    latitude: 18.9220,
+    zoom: 9,
     pitch: 0,
     bearing: 0,
   },

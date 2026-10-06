@@ -42,17 +42,16 @@ _Based on [docs/AUDIT.md](docs/AUDIT.md)._
 | Deterministic risk engine | ✅ Working | Wave >4m or Wind >60km/h → CRITICAL |
 | Hub/Port selector (10 Indian ports) | ✅ Working | Hardcoded port list with coordinates |
 | Live wave, wind, temperature data | ✅ Working | Open-Meteo Marine + Weather APIs |
-| SST values | ⚠️ Derived | Estimated from air temp (not satellite SST) |
+| SST and Ocean currents | ✅ Live | Open-Meteo Marine API |
 | Chlorophyll-a values | ⚠️ Derived | Heuristic from wave mixing + coastal proximity |
 | Salinity values | ⚠️ Derived | Heuristic from humidity + latitude |
-| Ocean current values | ⚠️ Derived | Ekman transport estimate from wind |
 | INCOIS/IMD/Copernicus/MOSDAC data | 📋 Roadmap | Connector skeletons exist; no live data |
-| Vessel-class safety thresholds | 📋 Roadmap | Currently one threshold for all vessels |
-| Multi-agent orchestration (LangGraph) | 📋 Roadmap | Currently a single orchestrator function |
+| Vessel-class safety thresholds | ✅ Working | Configured via `safety_thresholds.py` |
+| Multi-agent orchestration | ✅ Working | 10 custom python agents coordinate responses |
 | BHASHINI multilingual translation | 📋 Roadmap | Not implemented |
 | Voice input/output | 📋 Roadmap | Not implemented |
-| Evidence panel with provenance | 📋 Roadmap | Not implemented |
-| Decision audit log | 📋 Roadmap | Not implemented |
+| Evidence panel with provenance | ✅ Working | Chat responses include data provenance |
+| Decision audit log | ✅ Working | GET `/api/audit` endpoint tracks all verdicts |
 
 ---
 
@@ -116,17 +115,7 @@ graph TB
 | Risk Engine | `orchestrator.py:RiskSafetyEngine` | Deterministic GO/CAUTION/NO-GO based on wave height and wind speed |
 | Config | `backend/app/core/config.py` | Environment variable management via Pydantic Settings |
 
-### Safety Model
-
-The risk engine in `RiskSafetyEngine.calculate_risk()` uses these thresholds:
-
-| Condition | Result |
-|-----------|--------|
-| Wave height > 4.0m **OR** Wind speed > 60 km/h | `CRITICAL_RISK — DO NOT SAIL` |
-| Wave height > 2.5m **OR** Wind speed > 40 km/h | `HIGH_RISK — CAUTION ADVISED` |
-| Below both thresholds | `SAFE_FOR_SAILING` |
-
-These are **not** vessel-class-specific. Vessel-class differentiation (traditional raft vs. deep-sea trawler) is planned for the next iteration.
+The risk engine in `app.config.safety_thresholds` uses distinct GO / CAUTION / NO-GO thresholds based on four vessel classes: `traditional`, `motorised`, `mechanised`, and `deepsea`. Additionally, it includes an override mechanism for simulated cyclone scenarios.
 
 ---
 
@@ -194,7 +183,7 @@ Open [http://localhost:3000](http://localhost:3000).
 | POST | `/api/chat` | AI chat (JSON body: `{message, session_id?, location?}`) |
 | GET | `/api/recommendations?lat=&lon=` | Fishing recommendations |
 | GET | `/api/ports` | List of fishing ports |
-| GET | `/api/port-analysis?lat=&lon=` | Deep port analysis with route |
+| GET | `/api/audit` | Retrieves recent deterministic safety decisions |
 
 ---
 
@@ -210,9 +199,8 @@ Team GODSPLAN — Smart India Hackathon 2026
 
 - **Prototype scope**: Focused on the Mumbai/Maharashtra coastal area. Pan-India coverage is roadmap.
 - **Data latency**: Open-Meteo data updates hourly. Real INCOIS PFZ advisories are daily.
-- **SST, chlorophyll, salinity**: Currently derived from proxy calculations, not satellite observations.
+- **Chlorophyll, salinity**: Currently derived from proxy calculations, not satellite observations.
 - **Free-tier hosting**: Backend on Render free tier may have ~30s cold-start delays.
-- **Single safety threshold**: One set of wave/wind limits for all vessel types.
 
 ---
 

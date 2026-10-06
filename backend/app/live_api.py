@@ -169,7 +169,7 @@ async def _fetch_open_meteo_marine(lat: float, lon: float) -> Dict[str, Any]:
     params = {
         "latitude": lat,
         "longitude": lon,
-        "current": "wave_height,wave_direction,wave_period,swell_wave_height,swell_wave_direction,swell_wave_period",
+        "current": "wave_height,wave_direction,wave_period,swell_wave_height,swell_wave_direction,swell_wave_period,sea_surface_temperature,ocean_current_velocity,ocean_current_direction",
         "hourly": "wave_height,wave_direction,wave_period",
         "forecast_days": 1,
     }
@@ -336,36 +336,40 @@ async def live_observations(
         ))
 
     # ---- REAL LIVE OCEAN DATA (not estimated) ----
-    # SST: from Open-Meteo Marine current.ocean_surface_temperature if available,
-    # or from the weather API's sea_surface_temperature endpoint
     live_sst = None
     live_chl = None
     live_sal = None
+    
+    if marine_data and "current" in marine_data:
+        current = marine_data["current"]
+        # Actual SST from Marine API (fallback to air temp if null due to grid limits)
+        sst_val = current.get("sea_surface_temperature")
+        if sst_val is not None:
+            live_sst = round(sst_val, 1)
+        
+        # We can also add currents to observations
+        current_vel = current.get("ocean_current_velocity")
+        current_dir = current.get("ocean_current_direction")
+        if current_vel is not None and current_dir is not None:
+            observations.append(Observation(
+                id=f"currents-{uuid.uuid4().hex[:8]}",
+                type="ocean_current",
+                location=[lon, lat],
+                timestamp=current.get("time", now),
+                parameters={
+                    "velocity": current_vel,
+                    "velocity_unit": "km/h",
+                    "direction": current_dir,
+                    "direction_unit": "°",
+                },
+                source="open_meteo_marine",
+            ))
 
-    # Try to get real SST from a dedicated Open-Meteo ocean temperature call
-    try:
-        ocean_url = "https://marine-api.open-meteo.com/v1/marine"
-        ocean_params = {
-            "latitude": lat,
-            "longitude": lon,
-            "current": "wave_height,wave_direction,wave_period,swell_wave_height",
-            "hourly": "wave_height,wave_period,wave_direction",
-            "forecast_days": 1,
-        }
-        ocean_resp = await client.get(ocean_url, params=ocean_params, timeout=10.0)
-        if ocean_resp.status_code == 200:
-            ocean_json = ocean_resp.json()
-            # Open-Meteo Marine doesn't provide SST directly, so use weather API temp as proxy
-            pass
-    except Exception as e:
-        logger.warning(f"Ocean temp fetch error: {e}")
-
-    # Use weather API temperature as sea-surface proxy (coastal areas)
-    if weather_data and "current" in weather_data:
+    # Fallback to air temperature proxy if marine SST is null (e.g. inland/grid edge)
+    if live_sst is None and weather_data and "current" in weather_data:
         air_temp = weather_data["current"].get("temperature_2m", None)
         if air_temp is not None:
-            # SST is typically 1-3°C warmer than air temp in tropical waters
-            live_sst = round(air_temp + 1.5 + (hash(f"{lat:.2f}{lon:.2f}") % 100) / 100.0, 1)
+            live_sst = round(air_temp + 1.5, 1)
     
     # Chlorophyll: derive from wave conditions + proximity to coast
     if marine_data and "current" in marine_data:
@@ -404,7 +408,9 @@ async def live_observations(
             "chlorophyll_unit": "mg/m³",
             "salinity": live_sal,
             "salinity_unit": "PSU",
-            "data_source": "live_open_meteo_derived",
+            "data_source": "live_open_meteo",
+            "chlorophyll_note": "modelled estimate",
+            "salinity_note": "modelled estimate",
         },
         source="open_meteo_live",
     ))
@@ -675,6 +681,8 @@ class ChatRequest(BaseModel):
     message: str
     session_id: Optional[str] = None
     location: Optional[List[float]] = None
+    vessel_class: Optional[str] = "motorised"
+    cyclone_active: Optional[bool] = False
 
 
 class ChatResponseModel(BaseModel):
@@ -682,6 +690,8 @@ class ChatResponseModel(BaseModel):
     session_id: str
     suggestions: Optional[List[str]] = None
     map_actions: Optional[List[Any]] = None
+    evidence: Optional[List[Dict[str, Any]]] = None
+    agent_trace: Optional[List[Dict[str, Any]]] = None
 
 
 # Store simple session context in memory
@@ -722,7 +732,12 @@ async def live_chat(request: ChatRequest):
     # Build location context and Orchestrate Agents (Default to Sassoon Dock, Mumbai if no location)
     from app.services.orchestrator import orchestrate_chat
     location_to_use = request.location or [72.8258, 18.9220]
-    orchestration = await orchestrate_chat(request.message, location_to_use)
+    orchestration = await orchestrate_chat(
+        request.message, 
+        location_to_use, 
+        vessel_class=request.vessel_class, 
+        cyclone_active=request.cyclone_active
+    )
     
     # Add user message to history
     history.append({"role": "user", "content": request.message})
@@ -797,12 +812,21 @@ async def live_chat(request: ChatRequest):
 
     # Build map_actions if location was provided
     map_actions = orchestration.get("map_actions", None)
-
+    
+    # Do LLM post-check for evidence numbers
+    evidence = orchestration.get("evidence", [])
+    agent_trace = orchestration.get("agent_trace", [])
+    
+    # Very basic post-check: if a number is in assistant_msg but not in evidence values, maybe replace it
+    # For now, just pass evidence up to frontend
+    
     return ChatResponseModel(
         response=assistant_msg,
         session_id=session_id,
         suggestions=suggestions,
         map_actions=map_actions,
+        evidence=evidence,
+        agent_trace=agent_trace,
     )
 
 
@@ -1037,3 +1061,13 @@ async def port_analysis(
         ),
     }
 
+
+# ============================================================
+# 8. GET /api/audit — Decision Log
+# ============================================================
+
+@router.get("/api/audit")
+async def get_audit_log(limit: int = 20):
+    from app.services.status_service import status_service
+    log = status_service.decision_log[-limit:] if limit > 0 else status_service.decision_log
+    return {"decisions": list(reversed(log))}

@@ -92,30 +92,32 @@ export default function SystemStatusBarClient({ initialData }: { initialData: an
         aria-live="polite"
         onClick={() => setDrawerOpen(true)}
         className="fixed top-0 left-0 right-0 z-50 bg-slate-900 text-slate-200 border-b border-slate-700 
-                   px-4 py-2 text-xs cursor-pointer hover:bg-slate-800 transition-colors animate-in slide-in-from-top
-                   flex flex-col md:flex-row items-center justify-between gap-2 shadow-sm font-mono h-auto md:h-9"
+                   px-2 sm:px-4 py-1.5 sm:py-2 text-[10px] sm:text-xs cursor-pointer hover:bg-slate-800 transition-colors animate-in slide-in-from-top
+                   flex items-center justify-between gap-2 shadow-sm font-mono h-8 sm:h-9"
       >
-        <div className="flex items-center gap-2 font-bold shrink-0">
-          <div className={`w-2 h-2 rounded-full ${seg1Color} ${system === 'live' ? 'animate-pulse' : ''}`} />
-          <span>{seg1Text}</span>
+        <div className="flex items-center gap-1.5 sm:gap-2 font-bold shrink-0">
+          <div className={`w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full ${seg1Color} ${system === 'live' ? 'animate-pulse' : ''}`} />
+          <span className="hidden sm:inline">{seg1Text}</span>
+          <span className="sm:hidden">{system.toUpperCase()}</span>
         </div>
         
-        <div className="text-center text-slate-400 truncate flex-1 min-w-0">
+        <div className="text-center text-slate-400 truncate flex-1 min-w-0 hidden md:block">
           {seg2Text}
         </div>
         
-        <div className="flex items-center gap-2 shrink-0">
-          <span>{seg3Text}</span>
+        <div className="flex items-center gap-1 sm:gap-2 shrink-0">
+          <span className="hidden sm:inline">{seg3Text}</span>
+          <span className="sm:hidden">{data?.agents_online || 0}/{data?.agents_total || 10} ON</span>
           <ChevronDown className="w-3 h-3 text-slate-500" />
         </div>
       </div>
 
       {/* Padding to push layout down */}
-      <div className="h-[52px] md:h-[36px] w-full" />
+      <div className="h-8 sm:h-9 w-full" />
 
       {/* Drawer */}
       {drawerOpen && (
-        <div className="fixed inset-0 z-[60] bg-black/60 flex items-start justify-center pt-[52px] md:pt-[36px]">
+        <div className="fixed inset-0 z-[60] bg-black/60 flex items-start justify-center pt-8 sm:pt-9">
           <div className="bg-white dark:bg-slate-900 w-full max-w-4xl max-h-[80vh] overflow-y-auto rounded-b-xl shadow-2xl border border-slate-200 dark:border-slate-700 animate-in slide-in-from-top p-6 relative">
             <button onClick={() => setDrawerOpen(false)} className="absolute top-4 right-4 p-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800">
               <X className="w-5 h-5 text-slate-500" />

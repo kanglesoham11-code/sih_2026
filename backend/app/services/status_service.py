@@ -6,18 +6,11 @@ from loguru import logger
 import httpx
 
 from app.core.config import settings
+from app.agents import (
+    PlannerAgent, LanguageAgent, DataDiscoveryAgent, PFZAgent,
+    OceanAgent, WeatherAgent, GeoAgent, RiskAgent, RouteAgent, ExplanationAgent,
+)
 
-# Agents
-from app.agents.planner import PlannerAgent
-from app.agents.language import LanguageAgent
-from app.agents.data_discovery import DataDiscoveryAgent
-from app.agents.pfz_agent import PfzAgentAgent
-from app.agents.ocean import OceanAgent
-from app.agents.weather import WeatherAgent
-from app.agents.geo import GeoAgent
-from app.agents.risk import RiskAgent
-from app.agents.route import RouteAgent
-from app.agents.explanation import ExplanationAgent
 
 class StatusService:
     def __init__(self):
@@ -31,7 +24,7 @@ class StatusService:
             "Planner": PlannerAgent(),
             "Language": LanguageAgent(),
             "DataDiscovery": DataDiscoveryAgent(),
-            "PFZ": PfzAgentAgent(),
+            "PFZ": PFZAgent(),
             "Ocean": OceanAgent(),
             "Weather": WeatherAgent(),
             "Geo": GeoAgent(),
@@ -40,10 +33,28 @@ class StatusService:
             "Explanation": ExplanationAgent(),
         }
         
+        # Decision audit log (in-memory)
+        self.decision_log: List[Dict[str, Any]] = []
+        
+    def log_decision(self, decision: Dict[str, Any]):
+        """Store a decision in the in-memory audit log."""
+        decision["id"] = len(self.decision_log) + 1
+        decision["timestamp"] = datetime.utcnow().isoformat() + "Z"
+        self.decision_log.append(decision)
+        # Keep last 100
+        if len(self.decision_log) > 100:
+            self.decision_log = self.decision_log[-100:]
+        
     async def fetch_marine(self):
         try:
             async with httpx.AsyncClient(timeout=10) as client:
-                resp = await client.get("https://marine-api.open-meteo.com/v1/marine?latitude=15&longitude=73&current=wave_height")
+                resp = await client.get(
+                    "https://marine-api.open-meteo.com/v1/marine",
+                    params={
+                        "latitude": 18.9, "longitude": 72.8,
+                        "current": "wave_height,wave_direction,wave_period,swell_wave_height,ocean_current_velocity,ocean_current_direction,sea_surface_temperature",
+                    }
+                )
                 if resp.status_code == 200:
                     self.last_marine_fetch = resp.json()
                     self.marine_last_success_at = time.time()
@@ -53,7 +64,13 @@ class StatusService:
     async def fetch_weather(self):
         try:
             async with httpx.AsyncClient(timeout=10) as client:
-                resp = await client.get("https://api.open-meteo.com/v1/forecast?latitude=15&longitude=73&current=temperature_2m")
+                resp = await client.get(
+                    "https://api.open-meteo.com/v1/forecast",
+                    params={
+                        "latitude": 18.9, "longitude": 72.8,
+                        "current": "temperature_2m,wind_speed_10m,wind_direction_10m,relative_humidity_2m",
+                    }
+                )
                 if resp.status_code == 200:
                     self.last_weather_fetch = resp.json()
                     self.weather_last_success_at = time.time()
@@ -71,16 +88,13 @@ class StatusService:
                 try:
                     start_t = time.time()
                     ok, latency, msg = agent.health()
-                    # Override real latency if the self-check was instantaneous
-                    real_latency = int((time.time() - start_t) * 1000)
-                    if latency < real_latency:
-                        latency = real_latency
+                    real_latency = max(latency, int((time.time() - start_t) * 1000))
                     
                     self.agents_state[name] = {
                         "name": name,
                         "status": "online" if ok else "offline",
                         "last_run_at": datetime.utcnow().isoformat() + "Z",
-                        "latency_ms": latency if latency > 0 else 5,
+                        "latency_ms": real_latency if real_latency > 0 else 1,
                         "check": msg
                     }
                 except Exception as e:
@@ -109,7 +123,7 @@ class StatusService:
             "last_success_at": datetime.utcfromtimestamp(self.marine_last_success_at).isoformat() + "Z" if self.marine_last_success_at else None,
             "age_seconds": marine_age if marine_age >= 0 else None,
             "refresh_interval_s": 60,
-            "note": "Live wave data"
+            "note": "Live SST, waves, currents"
         })
         
         weather_age = int(now - self.weather_last_success_at) if self.weather_last_success_at else -1
@@ -120,10 +134,9 @@ class StatusService:
             "last_success_at": datetime.utcfromtimestamp(self.weather_last_success_at).isoformat() + "Z" if self.weather_last_success_at else None,
             "age_seconds": weather_age if weather_age >= 0 else None,
             "refresh_interval_s": 60,
-            "note": "Live weather data"
+            "note": "Live wind, temperature, humidity"
         })
         
-        # Roadmap sources
         for roadmap_src in ["INCOIS", "IMD", "Copernicus", "MOSDAC", "BHASHINI"]:
             sources.append({
                 "name": roadmap_src,
@@ -137,7 +150,6 @@ class StatusService:
             
         agents = list(self.agents_state.values())
         if not agents:
-            # Fallback before first loop completes
             agents = [{"name": n, "status": "offline", "last_run_at": None, "latency_ms": 0, "check": "Initializing"} for n in self.agents.keys()]
             
         agents_online = sum(1 for a in agents if a["status"] == "online")

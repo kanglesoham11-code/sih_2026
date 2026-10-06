@@ -21,14 +21,14 @@ export function MainDashboard() {
       </div>
 
       {/* Top Left - Search and Hubs Button */}
-      <div className="absolute top-20 left-20 z-30 flex gap-4">
-        <div className="w-96">
+      <div className="absolute top-16 left-4 md:top-20 md:left-20 z-30 flex flex-col sm:flex-row gap-2 sm:gap-4 right-4 md:right-auto">
+        <div className="w-full sm:w-96">
           <SearchBar />
         </div>
         <button
           onClick={() => setShowFishingHub(true)}
           className="bg-white/90 backdrop-blur px-4 py-2 rounded-lg shadow-lg border border-gray-200 
-                     flex items-center gap-2 hover:bg-white transition-colors"
+                     flex items-center justify-center gap-2 hover:bg-white transition-colors"
         >
           <Anchor className="w-5 h-5 text-blue-600" />
           <span className="font-medium text-gray-700">Fishing Hubs</span>

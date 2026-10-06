@@ -40,6 +40,8 @@ export function AICopilot() {
 
   const [input, setInput] = useState('')
   const [isMinimized, setIsMinimized] = useState(false)
+  const [vesselClass, setVesselClass] = useState('motorised')
+  const [cycloneActive, setCycloneActive] = useState(false)
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLTextAreaElement>(null)
 
@@ -93,12 +95,16 @@ export function AICopilot() {
           message,
           session_id: newSessionId,
           location: activePort ? [activePort.lon, activePort.lat] : selectedLocation || undefined,
+          vessel_class: vesselClass,
+          cyclone_active: cycloneActive,
         })
       }
       return apiClient.sendChatMessage({
         message,
         session_id: sessionId,
         location: activePort ? [activePort.lon, activePort.lat] : selectedLocation || undefined,
+        vessel_class: vesselClass,
+        cyclone_active: cycloneActive,
       })
     },
     onSuccess: (data: any) => {
@@ -106,6 +112,8 @@ export function AICopilot() {
         role: 'assistant',
         content: data.response,
         timestamp: new Date().toISOString(),
+        evidence: data.evidence,
+        agent_trace: data.agent_trace,
       })
       if (data.session_id && !sessionId) {
         setSessionId(data.session_id)
@@ -171,11 +179,9 @@ export function AICopilot() {
   }
 
   const suggestions = [
-    '🎣 Analyze Sassoon Dock conditions',
-    '🌊 Check waves at Marine Drive',
-    '⚓ Best PFZ from Gateway of India',
-    'Show me sea surface temperature',
-    'Are there any active cyclone warnings?',
+    'Try this: 🎣 Find me a good fishing spot from here',
+    'Try this: 🌊 Is it safe to take my boat out today?',
+    'Try this: ⚓ What are the waves and wind like?',
   ]
 
   if (!copilotOpen) {
@@ -244,16 +250,46 @@ export function AICopilot() {
 
           {/* Active Starting Port */}
           {activePort && (
-            <div className="bg-emerald-50 border-b border-emerald-200 p-3 text-sm">
-              <div className="flex items-center gap-2 text-emerald-800">
-                <MapPin className="w-4 h-4" />
-                <span className="font-medium">Starting Port: {activePort.name}</span>
+            <div className="bg-emerald-50 border-b border-emerald-200 p-3 text-sm flex justify-between items-center">
+              <div>
+                <div className="flex items-center gap-2 text-emerald-800">
+                  <MapPin className="w-4 h-4" />
+                  <span className="font-medium">Starting Port: {activePort.name}</span>
+                </div>
+                <p className="text-xs text-emerald-700 mt-1">
+                  All routes and analysis start from here
+                </p>
               </div>
-              <p className="text-xs text-emerald-700 mt-1">
-                All routes and analysis start from here
-              </p>
             </div>
           )}
+          
+          {/* Settings / Overrides */}
+          <div className="p-3 bg-gray-50 border-b border-gray-200 text-xs flex flex-col gap-2">
+            <div className="flex justify-between items-center">
+              <span className="font-medium text-gray-700">Vessel Class:</span>
+              <select 
+                value={vesselClass} 
+                onChange={(e) => setVesselClass(e.target.value)}
+                className="bg-white border border-gray-300 rounded px-2 py-1 outline-none focus:border-ocean-500"
+              >
+                <option value="traditional">Traditional Canoe</option>
+                <option value="motorised">Motorised Boat</option>
+                <option value="mechanised">Mechanised Trawler</option>
+                <option value="deepsea">Deep-sea Vessel</option>
+              </select>
+            </div>
+            <label className="flex items-center justify-between cursor-pointer">
+              <span className="font-medium text-gray-700 flex items-center gap-1">
+                <AlertTriangle className="w-3 h-3 text-red-500" /> Simulated Cyclone Warning
+              </span>
+              <input 
+                type="checkbox" 
+                checked={cycloneActive}
+                onChange={(e) => setCycloneActive(e.target.checked)}
+                className="accent-red-500"
+              />
+            </label>
+          </div>
 
           {/* Selected Location */}
           {selectedLocation && !activePort && (
@@ -305,6 +341,20 @@ export function AICopilot() {
                     <div className="text-sm whitespace-pre-wrap break-words">
                       {message.content}
                     </div>
+                    {/* Render Evidence if available */}
+                    {message.role === 'assistant' && message.evidence && message.evidence.length > 0 && (
+                      <div className="mt-3 pt-2 border-t border-gray-300/50">
+                        <div className="text-xs font-semibold text-gray-600 mb-1">🔍 Evidence & Sources</div>
+                        <ul className="space-y-1">
+                          {message.evidence.map((item: any, i: number) => (
+                            <li key={i} className="text-[10px] text-gray-600 flex justify-between bg-white/50 px-1.5 py-1 rounded">
+                              <span>{item.claim}: <span className="font-medium text-gray-800">{item.value}{item.unit}</span></span>
+                              <span className="text-gray-400">[{item.freshness}]</span>
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
                     <div
                       className={`text-xs mt-1 ${
                         message.role === 'user' ? 'text-ocean-100' : 'text-gray-500'

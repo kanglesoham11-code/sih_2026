@@ -1,7 +1,13 @@
 {
   "name": "orca-frontend",
   "version": "1.0.0",
-  "description": "ORCA - Marine Intelligence Platform",
+  "description": "ORCA - Marine EcoSystem Reasoning with Collaborative Agents (SIH 2026)",
+  "homepage": "https://sih-2026-eight-sigma.vercel.app",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/kanglesoham11-code/sih_2026.git"
+  },
+  "keywords": ["sih2026", "marine", "fishing", "ai", "agents", "nextjs"],
   "scripts": {
     "dev": "next dev -p 3000",
     "build": "next build",

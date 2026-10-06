@@ -15,10 +15,10 @@ _Generated: 2026-10-06. Based on reading every file under `backend/app/` and `fr
 | **Air Temperature** | ✅ Live fetched | Open-Meteo Weather API (`temperature_2m`) | |
 | **Humidity** | ✅ Live fetched | Open-Meteo Weather API (`relative_humidity_2m`) | |
 | **Pressure** | ✅ Live fetched | Open-Meteo Weather API (`pressure_msl`) | |
-| **SST** | ⚠️ Derived | Air temp + 1.5°C + hash jitter | `live_api.py:361`. NOT fetched from any ocean SST dataset. |
+| **SST** | ✅ Live fetched | Open-Meteo Marine API (`sea_surface_temperature`) | |
 | **Chlorophyll-a** | ⚠️ Derived | Computed from wave height + coastal proximity heuristic | `live_api.py:363-371`. No satellite data. |
 | **Salinity** | ⚠️ Derived | Computed from humidity + latitude heuristic | `live_api.py:374-378`. No oceanographic source. |
-| **Ocean Currents** | ⚠️ Derived | Estimated from wind via Ekman transport formula | In `scientific_engine.py`. No current-meter or model data. |
+| **Ocean Currents** | ✅ Live fetched | Open-Meteo Marine API (`ocean_current_velocity/direction`) | |
 | **EEZ Boundaries** | 🔧 Hardcoded | Static polygon in `scientific_engine.py` | India EEZ approximation only. |
 
 ## 2. Features — What Is Implemented
@@ -37,22 +37,22 @@ _Generated: 2026-10-06. Based on reading every file under `backend/app/` and `fr
 | MOSDAC connector | ❌ Simulated | `copernicus_mosdac_live.py:33-48` | Returns random values |
 | IMD connector | ❌ Skeleton | `imd_weather.py` | Class structure only; no real API calls |
 | BHASHINI translation | ❌ Not implemented | — | No code exists |
-| Vessel-class thresholds | ❌ Not implemented | — | Single threshold for all vessel types |
+| Vessel-class thresholds | ✅ Implemented | `safety_thresholds.py` | Configured for 4 vessel types |
 | Multilingual UI | ❌ Not implemented | — | English only |
 | Voice input/output | ❌ Not implemented | — | No Web Speech API code |
-| Audit log | ❌ Not implemented | — | No decision logging |
-| Evidence panel | ❌ Not implemented | — | No evidence[] in API responses |
-| Multi-agent system | ❌ Not implemented | — | Single `orchestrate_chat()` function |
+| Audit log | ✅ Implemented | `GET /api/audit` | In-memory decision log tracks verdicts |
+| Evidence panel | ✅ Implemented | `frontend/components/copilot/AICopilot.tsx` | Included in Chat responses |
+| Multi-agent system | ✅ Implemented | `orchestrator.py` & `agents/` | 10 custom python agents working sequentially |
 
 ## 3. Architecture Reality
 
 The backend is a **single FastAPI application** (`app/main.py`) with:
 - `live_api.py` — all HTTP endpoints (health, sources, observations, PFZ, chat, recommendations, ports, port-analysis)
-- `services/orchestrator.py` — one function `orchestrate_chat()` that fetches Open-Meteo data, computes PFZ, formats context, and passes to LLM
+- `services/orchestrator.py` — Coordinates 10 custom agents in sequence, passes context, manages evidence.
 - `services/scientific_engine.py` — deterministic PFZ calculator with SST gradient, thermal front, and species habitat logic
-- `connectors/` — skeleton connectors for INCOIS, IMD, Copernicus, MOSDAC (none truly functional)
+- `agents/` — Implementation of 10 real agent classes (e.g., PlannerAgent, OceanAgent, RiskAgent) with health checks.
 
-There is **no LangGraph**, **no multi-agent orchestration**, **no agent trace**, and **no Redis/Celery task queue** in the live path.
+There is **no LangGraph** and **no Redis/Celery task queue** in the live path, but the system IS multi-agent using sequential function calls.
 
 ## 4. Database Dependency
 
