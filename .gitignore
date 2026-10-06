@@ -1,35 +1,22 @@
-# Python
+# Dependencies
+node_modules/
 __pycache__/
-*.py[cod]
-*$py.class
-*.so
-.Python
-build/
-develop-eggs/
+*.pyc
+*.pyo
+.next/
+out/
 dist/
-downloads/
-eggs/
-.eggs/
-/lib/
-/lib64/
-parts/
-sdist/
-var/
-wheels/
+build/
 *.egg-info/
-.installed.cfg
-*.egg
-
-# Virtual environments
 venv/
+.venv/
 env/
-ENV/
-.venv
 
-# Environment variables - NEVER commit secrets
+# Environment / Secrets
 .env
 .env.local
-.env.*.local
+.env.production.local
+.env.development.local
 
 # IDE
 .vscode/
@@ -37,49 +24,24 @@ ENV/
 *.swp
 *.swo
 *~
+
+# OS
 .DS_Store
-
-# Testing
-.pytest_cache/
-.coverage
-htmlcov/
-*.cover
-.hypothesis/
-
-# Database
-*.db
-*.sqlite3
+Thumbs.db
+desktop.ini
 
 # Logs
 *.log
-logs/
+npm-debug.log*
 
 # Docker
 docker-compose.override.yml
 
-# Jupyter
-.ipynb_checkpoints/
-*.ipynb
-
-# Secrets & credentials
-secrets/
-*.key
-*.pem
-*.crt
-
-# Temporary files
-tmp/
-temp/
+# Misc
+*.bak
 *.tmp
-
-# Build artifacts
-*.zip
-*.tar.gz
-
-# Node (for frontend)
-node_modules/
-.next/
-out/
-dist/
-.turbo/
-*.tsbuildinfo
+coverage/
+.coverage
+htmlcov/
+.pytest_cache/
+.mypy_cache/
