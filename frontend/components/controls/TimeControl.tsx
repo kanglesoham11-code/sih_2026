@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useStore } from '@/lib/store'
 import { Calendar, Clock, ChevronLeft, ChevronRight } from 'lucide-react'
 import { format, addDays, subDays } from 'date-fns'
@@ -9,6 +9,11 @@ import { motion, AnimatePresence } from 'framer-motion'
 export function TimeControl() {
   const { selectedDate, setSelectedDate } = useStore()
   const [isOpen, setIsOpen] = useState(false)
+  const [isMounted, setIsMounted] = useState(false)
+
+  useEffect(() => {
+    setIsMounted(true)
+  }, [])
 
   const handlePreviousDay = () => {
     setSelectedDate(subDays(selectedDate, 1))
@@ -23,6 +28,8 @@ export function TimeControl() {
   }
 
   const isToday = format(selectedDate, 'yyyy-MM-dd') === format(new Date(), 'yyyy-MM-dd')
+
+  if (!isMounted) return null
 
   return (
     <div className="fixed bottom-4 right-4 z-30">

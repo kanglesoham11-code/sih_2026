@@ -3,7 +3,6 @@
 import { MainMap } from '@/components/map/MainMap'
 import { AICopilot } from '@/components/copilot/AICopilot'
 import { SearchBar } from '@/components/controls/SearchBar'
-import { StatusBar } from '@/components/controls/StatusBar'
 import { LayerControl } from '@/components/controls/LayerControl'
 import { InfoPanel } from '@/components/panels/InfoPanel'
 import { TimeControl } from '@/components/controls/TimeControl'
@@ -44,9 +43,6 @@ export function MainDashboard() {
 
       {/* Right Side - AI Copilot */}
       <AICopilot />
-
-      {/* Bottom - Status Bar */}
-      <StatusBar />
 
       {/* Bottom Right - Time Control */}
       <TimeControl />

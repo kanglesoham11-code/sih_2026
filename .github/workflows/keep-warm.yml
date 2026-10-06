@@ -1,0 +1,15 @@
+name: Keep-Warm
+
+on:
+  schedule:
+    - cron: '*/10 * * * *'
+  workflow_dispatch:
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ping Backend
+        run: |
+          curl -s -f https://orca-backend-f2d4.onrender.com/health || true
+          curl -s -f https://orca-backend-f2d4.onrender.com/api/v1/status || true

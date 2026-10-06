@@ -314,7 +314,10 @@ export function FishingHubSelector() {
             <Anchor className="w-8 h-8 text-white" />
           </div>
           <h1 className="text-4xl md:text-5xl font-bold text-white mb-4">Choose Your Fishing Hub</h1>
-          <p className="text-blue-200 text-lg">Select a location to get real-time marine intelligence and PFZ recommendations.</p>
+          <p className="text-blue-200 text-lg mb-2">Select a location to get real-time marine intelligence and PFZ recommendations.</p>
+          <p className="text-sm text-blue-300/80 max-w-2xl mx-auto italic font-light">
+            Safety-first: any active warning forces an automatic NO-GO. Every answer cites its source and timestamp.
+          </p>
         </div>
 
         <motion.div variants={container} initial="hidden" animate="show" className="space-y-12">

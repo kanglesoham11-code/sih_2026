@@ -43,6 +43,8 @@ app.include_router(api_router, prefix="/api/v1")
 app.include_router(live_router)
 
 
+from app.services.status_service import status_service
+
 @app.on_event("startup")
 async def startup_event():
     """Application startup tasks"""
@@ -50,9 +52,8 @@ async def startup_event():
     logger.info(f"Environment: {settings.APP_ENV}")
     logger.info(f"Database: {settings.DATABASE_URL.split('@')[-1] if settings.DATABASE_URL else 'Not configured'}")
     
-    # TODO: Initialize database connections
-    # TODO: Run health checks on critical sources
-    # TODO: Load source registry
+    # Start the continuous live data and agent health background polling
+    status_service.start_loops()
     
     logger.info("ORCA startup complete")
 

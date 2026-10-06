@@ -141,6 +141,13 @@ async def live_sources():
     return sources
 
 
+@router.get("/api/v1/status")
+async def get_system_status():
+    """Return comprehensive system status (Data sources + Agents)."""
+    from app.services.status_service import status_service
+    return status_service.get_status()
+
+
 # ============================================================
 # 3. GET /api/observations — Real ocean + weather data
 # ============================================================
