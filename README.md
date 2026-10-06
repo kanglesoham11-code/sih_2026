@@ -25,6 +25,11 @@ ORCA is an AI-powered marine intelligence platform that:
 
 ---
 
+## Live System Status
+
+![Initial Hub Screen](docs/screenshots/initial_hub_screen.png)
+![System Status Drawer](docs/screenshots/system_status_drawer.png)
+
 ## What Works Today vs Roadmap
 
 _Based on [docs/AUDIT.md](docs/AUDIT.md)._
