@@ -93,7 +93,7 @@ const COASTAL_SPOTS = [
 ]
 
 const LOADING_STEPS = [
-  { icon: Radar, text: 'Scraping live ocean data...', color: 'text-blue-400' },
+  { icon: Radar, text: 'Fetching live ocean data...', color: 'text-blue-400' },
   { icon: CloudSun, text: 'Checking weather conditions...', color: 'text-cyan-400' },
   { icon: ShieldCheck, text: 'Running safety checks...', color: 'text-green-400' },
   { icon: Fish, text: 'Analyzing fish migration patterns...', color: 'text-teal-400' },

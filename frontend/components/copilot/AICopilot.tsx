@@ -151,7 +151,7 @@ export function AICopilot() {
     onError: () => {
       addChatMessage({
         role: 'assistant',
-        content: '🔄 **Scraping live and fresh data!** Please wait a moment while I gather the latest ocean and weather information for you. Try asking again in a few seconds.',
+        content: '🔄 **Fetching live data from official APIs!** Please wait a moment while I gather the latest ocean and weather information for you. Try asking again in a few seconds.',
         timestamp: new Date().toISOString(),
       })
     },
